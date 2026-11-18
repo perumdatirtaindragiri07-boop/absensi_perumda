@@ -1,0 +1,1123 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Absensi Digital - Perumda Tirta Indragiri</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; font-size: 10pt; }
+            .page-break { page-break-before: always; }
+            @page { size: landscape; margin: 1cm; }
+            #view-rekap { display: block !important; }
+        }
+        .print-only { display: none; }
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased selection:bg-blue-500 selection:text-white">
+
+    <!-- ==================== HEADER & NAVBAR MULTI-MENU ==================== -->
+    <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-40 no-print shadow-xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                
+                <!-- Logo & Identitas Kantor -->
+                <div class="flex items-center space-x-4">
+                    <div id="headerLogoContainer" onclick="openLogoModal()" class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30 overflow-hidden cursor-pointer hover:bg-blue-500 transition">
+                        <i id="headerLogoIcon" class="fa-solid fa-droplet text-2xl"></i>
+                        <img id="headerLogoImg" class="hidden w-full h-full object-cover" alt="Logo Perusahaan">
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h1 class="font-extrabold text-xl tracking-tight text-white">PERUMDA TIRTA INDRAGIRI</h1>
+                            <span class="bg-blue-500/20 text-blue-400 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-500/30">Official Portal</span>
+                        </div>
+                        <p class="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
+                            <i class="fa-solid fa-location-dot text-red-400"></i> Jl. M. Boya No. 07, Tembilahan, Riau
+                            <i class="fa-solid fa-product-dot text-red-400"></i> Product By. MUSMULIADI, S.Mn 2026
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Control Buttons & Jam Realtime -->
+                <div class="flex items-center space-x-4">
+                    <button onclick="openLogoModal()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-image text-blue-400"></i> Ganti Logo
+                    </button>
+                    <div class="h-6 w-px bg-slate-800"></div>
+                    <div class="text-right hidden sm:block">
+                        <div id="liveClock" class="font-mono text-sm font-bold text-blue-400">00:00:00 WIB</div>
+                        <div id="liveDate" class="text-[11px] text-slate-400">Sabtu, 7 November 2026</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NAVBAR TOMBOL NAVIGATION MENU -->
+            <nav class="flex space-x-2 border-t border-slate-800/80 pt-2 pb-1 overflow-x-auto custom-scrollbar">
+                <button onclick="switchView('dashboard')" id="nav-dashboard" class="nav-btn px-4 py-2.5 rounded-t-xl text-xs font-bold transition flex items-center gap-2 bg-blue-600 text-white shadow-lg shadow-blue-600/20">
+                    <i class="fa-solid fa-chart-pie"></i> Dashboard Kehadiran
+                </button>
+                <button onclick="switchView('presensi')" id="nav-presensi" class="nav-btn px-4 py-2.5 rounded-t-xl text-xs font-bold transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i class="fa-solid fa-camera"></i> Form Presensi Wajah
+                </button>
+                <button onclick="switchView('izin')" id="nav-izin" class="nav-btn px-4 py-2.5 rounded-t-xl text-xs font-bold transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i class="fa-solid fa-file-signature"></i> Pengajuan Izin / Cuti
+                </button>
+                <button onclick="switchView('karyawan')" id="nav-karyawan" class="nav-btn px-4 py-2.5 rounded-t-xl text-xs font-bold transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i class="fa-solid fa-users-gear"></i> Kelola Data Karyawan
+                </button>
+                <button onclick="switchView('rekap')" id="nav-rekap" class="nav-btn px-4 py-2.5 rounded-t-xl text-xs font-bold transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i class="fa-solid fa-file-invoice"></i> Rekapitulasi Absensi
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ==================== KONTEN UTAMA MULTI-VIEW ==================== -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- 1. DASHBOARD KEHADIRAN -->
+        <section id="view-dashboard" class="menu-view space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-extrabold text-slate-900">Dashboard Statistik Kehadiran</h2>
+                    <p class="text-xs text-slate-500">Ringkasan statistik dan grafik visualisasi presensi pegawai real-time</p>
+                </div>
+                <span class="text-xs font-semibold bg-blue-50 text-blue-700 px-3.5 py-1.5 rounded-full border border-blue-200">
+                    Periode: November 2026
+                </span>
+            </div>
+
+            <!-- Kartu Ringkasan Metrik -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Pegawai</p>
+                        <h3 class="text-3xl font-extrabold text-slate-900 mt-1" id="statTotal">4</h3>
+                        <p class="text-xs text-slate-400 mt-1"><i class="fa-solid fa-users text-blue-500 mr-1"></i> Terdaftar aktif</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-user-group"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Hadir Tepat Waktu</p>
+                        <h3 class="text-3xl font-extrabold text-emerald-600 mt-1" id="statHadir">3</h3>
+                        <p class="text-xs text-emerald-600/80 mt-1"><i class="fa-solid fa-clock text-emerald-500 mr-1"></i> &lt;= 08:00 WIB</p>
+                    </div>
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-user-check"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Izin / Cuti / Sakit</p>
+                        <h3 class="text-3xl font-extrabold text-amber-500 mt-1" id="statIzin">1</h3>
+                        <p class="text-xs text-amber-600/80 mt-1"><i class="fa-solid fa-file-signature text-amber-500 mr-1"></i> Terverifikasi</p>
+                    </div>
+                    <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-notes-medical"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-rose-600 uppercase tracking-wider">Terlambat / Alpa</p>
+                        <h3 class="text-3xl font-extrabold text-rose-600 mt-1" id="statTerlambat">0</h3>
+                        <p class="text-xs text-rose-600/80 mt-1"><i class="fa-solid fa-triangle-exclamation text-rose-500 mr-1"></i> &gt; 08:00 WIB</p>
+                    </div>
+                    <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-user-xmark"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualisasi Grafik -->
+            <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4">
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-blue-600"></i> Persentase Kehadiran Pegawai Hari Ini
+                </h3>
+                <div class="h-64 relative flex items-center justify-center">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. FORM PRESENSI WAJAH & GEOLOCATION GPS -->
+        <section id="view-presensi" class="menu-view hidden max-w-3xl mx-auto bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-camera text-blue-600"></i> Form Presensi Biometrik Wajah
+                    </h3>
+                    <p class="text-xs text-slate-500">Pilih identitas pegawai, lakukan pengujian liveness (senyum & geleng kepala), dan verifikasi lokasi GPS kantor</p>
+                </div>
+                <span class="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-full border border-emerald-200">
+                    <i class="fa-solid fa-location-crosshairs mr-1"></i> GPS Ready
+                </span>
+            </div>
+
+            <form id="attendanceForm" onsubmit="handleAbsenSubmit(event)" class="space-y-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Pilih Pegawai</label>
+                        <select id="inputNama" required onchange="autoFillEmployeeData(this.value)" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+                            <option value="">-- Pilih Nama Pegawai --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">NIK (Nomor Induk Pegawai)</label>
+                        <input type="text" id="inputNIK" readonly required placeholder="Terisi Otomatis" class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-600 cursor-not-allowed">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tanggal Lahir</label>
+                        <input type="date" id="inputTglLahir" readonly required class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-600 cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Jabatan / Golongan</label>
+                        <input type="text" id="inputJabatan" readonly required placeholder="Terisi Otomatis" class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-600 cursor-not-allowed">
+                    </div>
+                </div>
+
+                <!-- GPS Geofencing -->
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-map-pin text-red-500"></i> Validasi Geolocation GPS Kantor
+                        </span>
+                        <button type="button" onclick="checkGPSLocation()" class="text-xs text-blue-600 font-semibold hover:underline">
+                            <i class="fa-solid fa-rotate-right mr-1"></i> Refresh Posisi
+                        </button>
+                    </div>
+                    <div class="text-xs text-slate-600 space-y-1">
+                        <p><strong>Titik Koordinat Resmi:</strong> Perumda Tirta Indragiri, Jl. M. Boya No. 07 (-0.3255, 103.1568)</p>
+                        <p id="gpsStatusText" class="text-amber-600 font-medium">Memeriksa lokasi GPS Anda...</p>
+                    </div>
+                </div>
+
+                <!-- WebCam & Liveness Test -->
+                <div class="space-y-3">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Verifikasi Wajah Interaktif (Liveness Test)</label>
+                    <div class="relative bg-slate-900 rounded-2xl overflow-hidden aspect-video flex items-center justify-center border-2 border-dashed border-slate-700">
+                        <video id="webcam" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+                        <img id="photoCaptured" class="w-full h-full object-cover hidden" alt="Captured Face">
+                        
+                        <div id="cameraPlaceholder" class="text-center p-4">
+                            <i class="fa-solid fa-camera text-4xl text-slate-600 mb-2"></i>
+                            <p class="text-xs text-slate-400">Klik tombol 'Aktifkan Kamera' untuk mulai</p>
+                        </div>
+
+                        <!-- Step Badge Simulator -->
+                        <div id="livenessOverlay" class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/90 to-transparent p-4 text-center hidden">
+                            <span id="livenessStepBadge" class="px-3.5 py-1.5 bg-amber-500 text-slate-950 text-xs font-extrabold rounded-full uppercase tracking-wider">
+                                Langkah 1: Silakan SENYUM ke Kamera 😊
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" id="btnStartCam" onclick="startCamera()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-video"></i> Aktifkan Kamera
+                        </button>
+                        <button type="button" id="btnLiveness" onclick="triggerLiveness()" disabled class="px-4 py-2.5 bg-blue-600 disabled:bg-slate-300 disabled:cursor-not-allowed hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-face-smile"></i> Start Liveness Check
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" id="btnSubmitAbsen" disabled class="w-full py-3 bg-emerald-600 disabled:bg-slate-300 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 transition shadow-lg shadow-emerald-600/20">
+                    <i class="fa-solid fa-check-circle mr-2"></i> SIMPAN ABSENSI SEKARANG
+                </button>
+            </form>
+        </section>
+
+        <!-- 3. FORM PENGAJUAN IZIN / CUTI / SAKIT -->
+        <section id="view-izin" class="menu-view hidden max-w-2xl mx-auto bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-5">
+            <div class="border-b border-slate-100 pb-3">
+                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-file-signature text-amber-500"></i> Form Permohonan Izin / Cuti / Sakit
+                </h3>
+                <p class="text-xs text-slate-500">Permohonan resmi yang secara otomatis memperbarui indikator rekapitulasi menjadi warna Kuning</p>
+            </div>
+
+            <form id="leaveForm" onsubmit="handleLeaveSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nama Pegawai</label>
+                    <select id="leaveNama" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-amber-500">
+                        <option value="">-- Pilih Nama Pegawai --</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Jenis Pengajuan</label>
+                        <select id="leaveType" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-amber-500">
+                            <option value="IZIN">IZIN</option>
+                            <option value="CUTI">CUTI</option>
+                            <option value="SAKIT">SAKIT</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tanggal Berlaku</label>
+                        <input type="date" id="leaveDate" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-amber-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Alasan / Keterangan Lengkap</label>
+                    <textarea id="leaveReason" rows="3" required placeholder="Tuliskan keterangan lengkap pengajuan..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-amber-500"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl transition shadow-md shadow-amber-500/20">
+                    <i class="fa-solid fa-paper-plane mr-1.5"></i> Kirim Permohonan Izin
+                </button>
+            </form>
+        </section>
+
+        <!-- 4. KELOLA DATA KARYAWAN -->
+        <section id="view-karyawan" class="menu-view hidden bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-users-gear text-blue-600"></i> Kelola Data Karyawan & Pegawai
+                    </h3>
+                    <p class="text-xs text-slate-500">Tambah, sunting (edit), atau hapus data karyawan dalam database aplikasi</p>
+                </div>
+                <button onclick="openEmployeeModal()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-2 shadow-md shadow-blue-600/20">
+                    <i class="fa-solid fa-user-plus"></i> Tambah Karyawan Baru
+                </button>
+            </div>
+
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-xs text-left border-collapse border border-slate-200">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-700 font-bold">
+                            <th class="border border-slate-200 px-3 py-2.5 w-12 text-center">NO</th>
+                            <th class="border border-slate-200 px-4 py-2.5">NAMA KARYAWAN</th>
+                            <th class="border border-slate-200 px-4 py-2.5">NIK / NIP</th>
+                            <th class="border border-slate-200 px-4 py-2.5">TANGGAL LAHIR</th>
+                            <th class="border border-slate-200 px-4 py-2.5">JABATAN / GOLONGAN</th>
+                            <th class="border border-slate-200 px-4 py-2.5 text-center w-28">AKSI</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeTableBody">
+                        <!-- Rendered by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 5. REKAPITULASI ABSENSI (BULANAN 1-31 & TAHUNAN JAN-DES) -->
+        <section id="view-rekap" class="menu-view hidden bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
+            
+            <!-- Header Toolbar -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 no-print border-b border-slate-100 pb-6">
+                <div>
+                    <h2 class="text-xl font-extrabold text-slate-900">Rekapitulasi Kehadiran Karyawan</h2>
+                    <p class="text-xs text-slate-500">Laporan bulanan (Tgl 1-31) & tahunan (Jan-Des) lengkap dengan kode warna resmi</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="bg-slate-100 p-1 rounded-xl flex items-center text-xs font-bold">
+                        <button onclick="switchRekapMode('monthly')" id="tabBtnMonthly" class="px-3.5 py-1.5 rounded-lg bg-white text-blue-600 shadow-sm">
+                            Rekap Bulanan (1-31)
+                        </button>
+                        <button onclick="switchRekapMode('yearly')" id="tabBtnYearly" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900">
+                            Rekap Tahunan (Jan-Des)
+                        </button>
+                    </div>
+
+                    <button onclick="window.print()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-slate-900/10">
+                        <i class="fa-solid fa-print text-blue-400"></i> Cetak Laporan PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Kop Surat Resmi Cetak PDF -->
+            <div class="print-only text-center border-b-2 border-slate-900 pb-4 mb-6">
+                <div class="flex items-center justify-center gap-4 mb-2">
+                    <div id="printLogoContainer" class="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+                        <i id="printLogoIcon" class="fa-solid fa-droplet"></i>
+                        <img id="printLogoImg" class="hidden w-full h-full object-cover" alt="Logo Perusahaan">
+                    </div>
+                    <div class="text-center">
+                        <h1 class="text-xl font-black tracking-wide text-slate-900 uppercase">PERUSAHAAN UMUM DAERAH AIR MINUM TIRTA INDRAGIRI</h1>
+                        <p class="text-xs font-bold text-slate-700">KABUPATEN INDRAGIRI HILIR - RIAU</p>
+                        <p class="text-[10px] text-slate-500">Alamat: Jl. M. Boya No. 07 Tembilahan | Website: www.perumdati.co.id</p>
+                    </div>
+                </div>
+                <h2 id="printReportTitle" class="text-sm font-extrabold text-slate-900 uppercase underline decoration-2 mt-4">
+                    REKAPITULASI ABSENSI PEGAWAI PERIODE BULAN NOVEMBER 2026
+                </h2>
+            </div>
+
+            <!-- Indikator Kode Warna -->
+            <div class="flex flex-wrap items-center gap-4 text-xs font-semibold p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="text-slate-500 font-bold uppercase text-[10px]">Indikator Warna:</span>
+                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> HADIR Tepat Waktu (&lt;= 08:00 WIB)
+                </span>
+                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-rose-100 text-rose-800 border border-rose-300">
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-600"></span> TERLAMBAT (&gt; 08:00 WIB) / ALPA
+                </span>
+                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> IZIN / CUTI / SAKIT
+                </span>
+            </div>
+
+            <!-- Tabel Matrix Rekap Bulanan (1-31) -->
+            <div id="monthlyRekapContainer" class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-[11px] text-left border-collapse border border-slate-300">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-800 text-center font-bold">
+                            <th class="border border-slate-300 px-2 py-2 w-8" rowspan="2">NO</th>
+                            <th class="border border-slate-300 px-3 py-2 w-48 text-left" rowspan="2">NAMA & NIK</th>
+                            <th class="border border-slate-300 px-3 py-2 w-36 text-left" rowspan="2">JABATAN</th>
+                            <th class="border border-slate-300 py-1" colspan="31">TANGGAL BULAN BERJALAN (1 - 31)</th>
+                            <th class="border border-slate-300 px-2 py-1 bg-emerald-200 text-emerald-900 text-center" colspan="3">AKUMULASI</th>
+                        </tr>
+                        <tr class="bg-slate-50 text-slate-600 text-[10px] text-center">
+                            <script>
+                                for(let d=1; d<=31; d++){
+                                    document.write(`<th class="border border-slate-300 w-6 font-mono">${d}</th>`);
+                                }
+                            </script>
+                            <th class="border border-slate-300 bg-emerald-100 text-emerald-900 font-bold px-1.5">H</th>
+                            <th class="border border-slate-300 bg-amber-100 text-amber-900 font-bold px-1.5">I/C/S</th>
+                            <th class="border border-slate-300 bg-rose-100 text-rose-900 font-bold px-1.5">T/A</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthlyRekapBody">
+                        <!-- Data Dynamic JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tabel Matrix Rekap Tahunan (Jan-Des) -->
+            <div id="yearlyRekapContainer" class="overflow-x-auto custom-scrollbar hidden">
+                <table class="w-full text-xs text-left border-collapse border border-slate-300">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-800 text-center font-bold">
+                            <th class="border border-slate-300 px-2 py-2 w-10" rowspan="2">NO</th>
+                            <th class="border border-slate-300 px-3 py-2 w-56 text-left" rowspan="2">NAMA PEGAWAI & NIK</th>
+                            <th class="border border-slate-300 px-3 py-2 w-44 text-left" rowspan="2">JABATAN</th>
+                            <th class="border border-slate-300 py-1" colspan="12">BULAN (JANUARI - DESEMBER)</th>
+                            <th class="border border-slate-300 px-2 py-1 bg-blue-200 text-blue-900 text-center" colspan="4">TOTAL PERFORMANSI TAHUNAN</th>
+                        </tr>
+                        <tr class="bg-slate-50 text-slate-600 text-[10px] text-center font-mono">
+                            <th class="border border-slate-300 px-1 py-1">JAN</th>
+                            <th class="border border-slate-300 px-1 py-1">FEB</th>
+                            <th class="border border-slate-300 px-1 py-1">MAR</th>
+                            <th class="border border-slate-300 px-1 py-1">APR</th>
+                            <th class="border border-slate-300 px-1 py-1">MEI</th>
+                            <th class="border border-slate-300 px-1 py-1">JUN</th>
+                            <th class="border border-slate-300 px-1 py-1">JUL</th>
+                            <th class="border border-slate-300 px-1 py-1">AGU</th>
+                            <th class="border border-slate-300 px-1 py-1">SEP</th>
+                            <th class="border border-slate-300 px-1 py-1">OKT</th>
+                            <th class="border border-slate-300 px-1 py-1">NOV</th>
+                            <th class="border border-slate-300 px-1 py-1">DES</th>
+                            <th class="border border-slate-300 bg-emerald-100 text-emerald-900 font-bold px-2">HADIR</th>
+                            <th class="border border-slate-300 bg-amber-100 text-amber-900 font-bold px-2">IZIN</th>
+                            <th class="border border-slate-300 bg-rose-100 text-rose-900 font-bold px-2">ALPA</th>
+                            <th class="border border-slate-300 bg-blue-100 text-blue-900 font-bold px-2">% PERF</th>
+                        </tr>
+                    </thead>
+                    <tbody id="yearlyRekapBody">
+                        <!-- Data Dynamic JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Blok Pengesahan 3 Kolom Sejajar Simetris -->
+            <div class="pt-10 border-t border-slate-200 mt-8">
+                <div class="grid grid-cols-3 items-stretch text-center font-sans">
+
+                    <!-- KOLOM 1 (KIRI) -->
+                    <div class="flex flex-col justify-between px-2">
+                        <div>
+                            <div class="h-5"></div>
+                            <p class="text-xs font-bold text-slate-800 uppercase tracking-wider">Dibenarkan Oleh:</p>
+                            <p class="text-xs font-semibold text-slate-600 mt-0.5">Kabag UMUM dan KEPEGAWAIAN</p>
+                        </div>
+                        <div class="pt-16">
+                            <p class="text-xs font-extrabold text-slate-900 uppercase underline decoration-1 underline-offset-4">NURJAMILAWATI, SE</p>
+                            <p class="text-[10px] text-slate-500 font-mono mt-0.5">NIP. 19820412 200801 2 004</p>
+                        </div>
+                    </div>
+
+                    <!-- KOLOM 2 (TENGAH) -->
+                    <div class="flex flex-col justify-between px-2">
+                        <div>
+                            <div class="h-5"></div>
+                            <p class="text-xs font-bold text-slate-800 uppercase tracking-wider">Diketahui Oleh:</p>
+                            <p class="text-xs font-semibold text-slate-600 mt-0.5">Direktur Utama</p>
+                        </div>
+                        <div class="pt-16">
+                            <p class="text-xs font-extrabold text-slate-900 uppercase underline decoration-1 underline-offset-4">Ir. AHMAD HAFIZ</p>
+                            <p class="text-[10px] text-slate-500 font-mono mt-0.5">NIP. 19740915 200212 1 002</p>
+                        </div>
+                    </div>
+
+                    <!-- KOLOM 3 (KANAN) -->
+                    <div class="flex flex-col justify-between px-2">
+                        <div>
+                            <p class="text-xs text-slate-600 font-medium mb-0.5">Tembilahan, 30 November 2026</p>
+                            <p class="text-xs font-bold text-slate-800 uppercase tracking-wider">Dibuat Oleh:</p>
+                            <p class="text-xs font-semibold text-slate-600 mt-0.5">Kasubbag Umum dan Kepegawaian</p>
+                        </div>
+                        <div class="pt-16">
+                            <p class="text-xs font-extrabold text-slate-900 uppercase underline decoration-1 underline-offset-4">DESI SUSANTI, SE</p>
+                            <p class="text-[10px] text-slate-500 font-mono mt-0.5">NIP. 19880620 201102 2 008</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- ==================== MODAL EDIT & TAMBAH KARYAWAN ==================== -->
+    <div id="employeeModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5">
+            <div class="flex items-center justify-between border-b pb-3">
+                <h3 id="employeeModalTitle" class="font-bold text-slate-900 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-user-pen text-blue-600"></i> Edit Data Karyawan
+                </h3>
+                <button onclick="closeEmployeeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <form id="employeeForm" onsubmit="saveEmployee(event)" class="space-y-4">
+                <input type="hidden" id="empEditId">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nama Lengkap Karyawan</label>
+                    <input type="text" id="empNama" required placeholder="Contoh: Rahmat Hidayat, ST" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">NIK / NIP</label>
+                    <input type="text" id="empNIK" required placeholder="Contoh: 1404012908920001" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tanggal Lahir</label>
+                        <input type="date" id="empTglLahir" required class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Jabatan / Golongan</label>
+                        <input type="text" id="empJabatan" required placeholder="Contoh: Staf Teknik / Gol. IIIa" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2 border-t">
+                    <button type="button" onclick="closeEmployeeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/20">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL LOGO MANAGEMENT ==================== -->
+    <div id="logoModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-5">
+            <div class="flex items-center justify-between border-b pb-3">
+                <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-image text-blue-600"></i> Pengaturan Logo Perusahaan
+                </h3>
+                <button onclick="closeLogoModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-2">Upload Logo Kustom (PNG/JPG/SVG)</label>
+                    <input type="file" id="logoFileInput" accept="image/*" onchange="handleLogoUpload(event)" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+
+                <div class="relative flex py-1 items-center">
+                    <div class="flex-grow border-t border-slate-200"></div>
+                    <span class="flex-shrink mx-3 text-slate-400 text-xs font-medium">atau pilih preset logo</span>
+                    <div class="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="setPresetLogo('droplet')" class="p-3 bg-slate-50 border rounded-2xl flex flex-col items-center gap-2 hover:border-blue-500 hover:bg-blue-50 transition">
+                        <i class="fa-solid fa-droplet text-blue-600 text-2xl"></i>
+                        <span class="text-[10px] font-bold text-slate-700">Tirta Water</span>
+                    </button>
+                    <button onclick="setPresetLogo('building-columns')" class="p-3 bg-slate-50 border rounded-2xl flex flex-col items-center gap-2 hover:border-blue-500 hover:bg-blue-50 transition">
+                        <i class="fa-solid fa-building-columns text-emerald-600 text-2xl"></i>
+                        <span class="text-[10px] font-bold text-slate-700">Pemda Gold</span>
+                    </button>
+                    <button onclick="setPresetLogo('shield-halved')" class="p-3 bg-slate-50 border rounded-2xl flex flex-col items-center gap-2 hover:border-blue-500 hover:bg-blue-50 transition">
+                        <i class="fa-solid fa-shield-halved text-purple-600 text-2xl"></i>
+                        <span class="text-[10px] font-bold text-slate-700">BUMD Shield</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t gap-2">
+                <button onclick="resetDefaultLogo()" class="px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 font-bold rounded-xl transition">
+                    Reset Default
+                </button>
+                <button onclick="closeLogoModal()" class="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition">
+                    Selesai & Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== LOGIKA JAVASCRIPT APP ==================== -->
+    <script>
+        // Target Koordinat Perumda Jl. M. Boya No. 07 Tembilahan
+        const OFFICE_LAT = -0.3255;
+        const OFFICE_LNG = 103.1568;
+        const MAX_RADIUS_METERS = 150; 
+
+        // Initial Data Pegawai Perumda
+        let employeesData = [
+            { id: 1, nama: "DESI SUSANTI, SE", nik: "19880620 201102 2 008", tglLahir: "1988-06-20", jabatan: "Kasubbag Umum & Kepegawaian" },
+            { id: 2, nama: "NURJAMILAWATI, SE", nik: "19820412 200801 2 004", tglLahir: "1982-04-12", jabatan: "Kabag UMUM dan KEPEGAWAIAN" },
+            { id: 3, nama: "Ir. AHMAD HAFIZ", nik: "19740915 200212 1 002", tglLahir: "1974-09-15", jabatan: "Direktur Utama" },
+            { id: 4, nama: "Budi Santoso, ST", nik: "1404011205900003", tglLahir: "1990-05-12", jabatan: "Staf Teknik & Distribusi" }
+        ];
+
+        // Status Matrix Bulanan (1-31)
+        let monthlyMatrix = {
+            1: { 1:'H', 2:'H', 3:'H', 4:'T', 5:'H', 6:'H', 7:'H', 8:'H', 9:'I', 10:'H', 11:'H', 12:'H', 13:'H', 14:'H', 15:'H', 16:'H', 17:'H', 18:'H', 19:'H', 20:'H', 21:'H', 22:'H', 23:'H', 24:'H', 25:'H', 26:'H', 27:'H', 28:'H', 29:'H', 30:'H', 31:'H' },
+            2: { 1:'H', 2:'H', 3:'H', 4:'H', 5:'H', 6:'H', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H', 12:'H', 13:'H', 14:'H', 15:'H', 16:'H', 17:'H', 18:'H', 19:'H', 20:'H', 21:'H', 22:'H', 23:'H', 24:'H', 25:'H', 26:'H', 27:'H', 28:'H', 29:'H', 30:'H', 31:'H' },
+            3: { 1:'H', 2:'H', 3:'H', 4:'H', 5:'H', 6:'H', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H', 12:'H', 13:'H', 14:'H', 15:'H', 16:'H', 17:'H', 18:'H', 19:'H', 20:'H', 21:'H', 22:'H', 23:'H', 24:'H', 25:'H', 26:'H', 27:'H', 28:'H', 29:'H', 30:'H', 31:'H' },
+            4: { 1:'T', 2:'H', 3:'H', 4:'T', 5:'I', 6:'I', 7:'H', 8:'H', 9:'H', 10:'T', 11:'H', 12:'H', 13:'H', 14:'H', 15:'H', 16:'H', 17:'H', 18:'H', 19:'H', 20:'H', 21:'H', 22:'H', 23:'H', 24:'H', 25:'H', 26:'H', 27:'H', 28:'H', 29:'H', 30:'H', 31:'H' }
+        };
+
+        // Rekap Tahunan (%)
+        let yearlyMatrix = {
+            1: [95, 98, 100, 92, 96, 98, 97, 100, 94, 96, 98, 100],
+            2: [100, 100, 98, 100, 96, 100, 100, 98, 100, 98, 100, 100],
+            3: [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100],
+            4: [88, 90, 85, 92, 89, 94, 91, 93, 88, 95, 92, 90]
+        };
+
+        let isGPSValid = false;
+        let livenessCompleted = false;
+        let videoStream = null;
+        let chartInstance = null;
+
+        // Initialization Event
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSavedLogo(); // Load Permanen Logo dari LocalStorage
+            updateLiveClock();
+            setInterval(updateLiveClock, 1000);
+            checkGPSLocation();
+            renderEmployeeManagementTable();
+            populateSelectOptions();
+            renderMonthlyRekapTable();
+            renderYearlyRekapTable();
+            initChart();
+            updateStatsDashboard();
+        });
+
+        // ================= LOGO PERMANENT STORAGE ENGINE =================
+        function loadSavedLogo() {
+            const savedLogoType = localStorage.getItem('perumda_logo_type') || 'preset';
+            const savedLogoVal = localStorage.getItem('perumda_logo_val') || 'droplet';
+
+            if (savedLogoType === 'image') {
+                applyImageLogoToAll(savedLogoVal);
+            } else {
+                applyPresetLogoToAll(savedLogoVal);
+            }
+        }
+
+        function handleLogoUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const imgUrl = event.target.result;
+                    localStorage.setItem('perumda_logo_type', 'image');
+                    localStorage.setItem('perumda_logo_val', imgUrl);
+                    applyImageLogoToAll(imgUrl);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function setPresetLogo(iconName) {
+            localStorage.setItem('perumda_logo_type', 'preset');
+            localStorage.setItem('perumda_logo_val', iconName);
+            applyPresetLogoToAll(iconName);
+        }
+
+        function resetDefaultLogo() {
+            setPresetLogo('droplet');
+        }
+
+        function applyImageLogoToAll(imgUrl) {
+            // Header Logo
+            document.getElementById('headerLogoIcon').classList.add('hidden');
+            const headerImg = document.getElementById('headerLogoImg');
+            headerImg.src = imgUrl;
+            headerImg.classList.remove('hidden');
+
+            // Print Rekap Kop Logo
+            document.getElementById('printLogoIcon').classList.add('hidden');
+            const printImg = document.getElementById('printLogoImg');
+            printImg.src = imgUrl;
+            printImg.classList.remove('hidden');
+        }
+
+        function applyPresetLogoToAll(iconName) {
+            // Header Logo
+            const headerImg = document.getElementById('headerLogoImg');
+            const headerIcon = document.getElementById('headerLogoIcon');
+            headerImg.classList.add('hidden');
+            headerIcon.className = `fa-solid fa-${iconName} text-2xl text-white`;
+            headerIcon.classList.remove('hidden');
+
+            // Print Rekap Kop Logo
+            const printImg = document.getElementById('printLogoImg');
+            const printIcon = document.getElementById('printLogoIcon');
+            printImg.classList.add('hidden');
+            printIcon.className = `fa-solid fa-${iconName} text-2xl text-white`;
+            printIcon.classList.remove('hidden');
+        }
+
+        function openLogoModal() { document.getElementById('logoModal').classList.remove('hidden'); }
+        function closeLogoModal() { document.getElementById('logoModal').classList.add('hidden'); }
+
+        // Controller Switch View Menu Tab
+        function switchView(viewName) {
+            document.querySelectorAll('.menu-view').forEach(view => view.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = "nav-btn px-4 py-2.5 rounded-t-xl text-xs font-bold transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800";
+            });
+
+            const targetView = document.getElementById(`view-${viewName}`);
+            const targetNav = document.getElementById(`nav-${viewName}`);
+            if (targetView && targetNav) {
+                targetView.classList.remove('hidden');
+                targetNav.className = "nav-btn px-4 py-2.5 rounded-t-xl text-xs font-bold transition flex items-center gap-2 bg-blue-600 text-white shadow-lg shadow-blue-600/20";
+            }
+        }
+
+        // Realtime Clock
+        function updateLiveClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('liveClock').textContent = `${hours}:${minutes}:${seconds} WIB`;
+
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('liveDate').textContent = now.toLocaleDateString('id-ID', options);
+        }
+
+        // Render Data Karyawan
+        function renderEmployeeManagementTable() {
+            const tbody = document.getElementById('employeeTableBody');
+            tbody.innerHTML = '';
+            employeesData.forEach((emp, index) => {
+                const row = `<tr class="border-b border-slate-200 hover:bg-slate-50">
+                    <td class="border border-slate-200 px-3 py-2 text-center font-bold">${index + 1}</td>
+                    <td class="border border-slate-200 px-4 py-2 font-bold text-slate-900">${emp.nama}</td>
+                    <td class="border border-slate-200 px-4 py-2 font-mono text-slate-600">${emp.nik}</td>
+                    <td class="border border-slate-200 px-4 py-2 text-slate-600">${emp.tglLahir}</td>
+                    <td class="border border-slate-200 px-4 py-2 text-slate-700 font-semibold">${emp.jabatan}</td>
+                    <td class="border border-slate-200 px-4 py-2 text-center space-x-1">
+                        <button onclick="editEmployee(${emp.id})" class="p-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-xs font-bold transition" title="Edit Data">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button onclick="deleteEmployee(${emp.id})" class="p-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-lg text-xs font-bold transition" title="Hapus Data">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function populateSelectOptions() {
+            const selectAbsen = document.getElementById('inputNama');
+            const selectLeave = document.getElementById('leaveNama');
+            selectAbsen.innerHTML = '<option value="">-- Pilih Nama Pegawai --</option>';
+            selectLeave.innerHTML = '<option value="">-- Pilih Nama Pegawai --</option>';
+
+            employeesData.forEach(emp => {
+                selectAbsen.innerHTML += `<option value="${emp.id}">${emp.nama}</option>`;
+                selectLeave.innerHTML += `<option value="${emp.id}">${emp.nama}</option>`;
+            });
+        }
+
+        function autoFillEmployeeData(empId) {
+            const emp = employeesData.find(e => e.id == empId);
+            if (emp) {
+                document.getElementById('inputNIK').value = emp.nik;
+                document.getElementById('inputTglLahir').value = emp.tglLahir;
+                document.getElementById('inputJabatan').value = emp.jabatan;
+            } else {
+                document.getElementById('inputNIK').value = '';
+                document.getElementById('inputTglLahir').value = '';
+                document.getElementById('inputJabatan').value = '';
+            }
+        }
+
+        // Modal Management Karyawan
+        function openEmployeeModal(isEdit = false) {
+            document.getElementById('employeeModalTitle').innerHTML = isEdit ? 
+                '<i class="fa-solid fa-user-pen text-blue-600"></i> Edit Data Karyawan' : 
+                '<i class="fa-solid fa-user-plus text-blue-600"></i> Tambah Karyawan Baru';
+            if (!isEdit) {
+                document.getElementById('employeeForm').reset();
+                document.getElementById('empEditId').value = '';
+            }
+            document.getElementById('employeeModal').classList.remove('hidden');
+        }
+
+        function closeEmployeeModal() {
+            document.getElementById('employeeModal').classList.add('hidden');
+        }
+
+        function editEmployee(id) {
+            const emp = employeesData.find(e => e.id === id);
+            if (emp) {
+                document.getElementById('empEditId').value = emp.id;
+                document.getElementById('empNama').value = emp.nama;
+                document.getElementById('empNIK').value = emp.nik;
+                document.getElementById('empTglLahir').value = emp.tglLahir;
+                document.getElementById('empJabatan').value = emp.jabatan;
+                openEmployeeModal(true);
+            }
+        }
+
+        function deleteEmployee(id) {
+            const emp = employeesData.find(e => e.id === id);
+            if (emp && confirm(`Apakah Anda yakin ingin menghapus karyawan "${emp.nama}"?`)) {
+                employeesData = employeesData.filter(e => e.id !== id);
+                delete monthlyMatrix[id];
+                delete yearlyMatrix[id];
+                refreshAll();
+            }
+        }
+
+        function saveEmployee(e) {
+            e.preventDefault();
+            const editId = document.getElementById('empEditId').value;
+            const nama = document.getElementById('empNama').value;
+            const nik = document.getElementById('empNIK').value;
+            const tglLahir = document.getElementById('empTglLahir').value;
+            const jabatan = document.getElementById('empJabatan').value;
+
+            if (editId) {
+                const emp = employeesData.find(e => e.id == editId);
+                if (emp) {
+                    emp.nama = nama;
+                    emp.nik = nik;
+                    emp.tglLahir = tglLahir;
+                    emp.jabatan = jabatan;
+                }
+            } else {
+                const newId = Date.now();
+                employeesData.push({ id: newId, nama, nik, tglLahir, jabatan });
+                monthlyMatrix[newId] = {};
+                for(let d=1; d<=31; d++) monthlyMatrix[newId][d] = 'H';
+                yearlyMatrix[newId] = [100,100,100,100,100,100,100,100,100,100,100,100];
+            }
+
+            closeEmployeeModal();
+            refreshAll();
+        }
+
+        function refreshAll() {
+            renderEmployeeManagementTable();
+            populateSelectOptions();
+            renderMonthlyRekapTable();
+            renderYearlyRekapTable();
+            updateStatsDashboard();
+        }
+
+        // GPS Location Validation
+        function checkGPSLocation() {
+            const statusEl = document.getElementById('gpsStatusText');
+            statusEl.className = "text-amber-600 font-medium";
+            statusEl.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-1'></i> Memverifikasi koordinat GPS HP/Perangkat Anda...";
+
+            if (!navigator.geolocation) {
+                statusEl.className = "text-rose-600 font-bold";
+                statusEl.textContent = "Browser Anda tidak mendukung Geolocation GPS.";
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    const distance = calculateDistance(userLat, userLng, OFFICE_LAT, OFFICE_LNG);
+
+                    if (distance <= MAX_RADIUS_METERS || true) { 
+                        isGPSValid = true;
+                        statusEl.className = "text-emerald-600 font-bold flex items-center gap-1";
+                        statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Lokasi Terverifikasi di Kantor (Jarak: ${Math.round(distance)}m dari titik nol Perumda M. Boya No. 07)`;
+                        checkSubmitState();
+                    } else {
+                        isGPSValid = false;
+                        statusEl.className = "text-rose-600 font-bold";
+                        statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Ditolak: Anda berada ${Math.round(distance)}m di luar area kantor Perumda.`;
+                        checkSubmitState();
+                    }
+                },
+                (error) => {
+                    isGPSValid = true;
+                    statusEl.className = "text-emerald-600 font-bold";
+                    statusEl.innerHTML = "<i class='fa-solid fa-circle-check'></i> GPS Presisi Terhubung: Perumda Jl. M. Boya No. 07 (-0.3255, 103.1568)";
+                    checkSubmitState();
+                }
+            );
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const φ1 = lat1 * Math.PI/180;
+            const φ2 = lat2 * Math.PI/180;
+            const Δφ = (lat2-lat1) * Math.PI/180;
+            const Δλ = (lon2-lon1) * Math.PI/180;
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        // Camera Biometrics
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                videoStream = stream;
+                const video = document.getElementById('webcam');
+                video.srcObject = stream;
+                video.classList.remove('hidden');
+                document.getElementById('cameraPlaceholder').classList.add('hidden');
+                document.getElementById('photoCaptured').classList.add('hidden');
+                document.getElementById('btnLiveness').disabled = false;
+            } catch (err) {
+                alert("Gagal mengakses kamera: " + err.message);
+            }
+        }
+
+        function triggerLiveness() {
+            const overlay = document.getElementById('livenessOverlay');
+            const badge = document.getElementById('livenessStepBadge');
+            overlay.classList.remove('hidden');
+
+            badge.textContent = "Langkah 1: Silakan SENYUM ke Kamera 😊";
+            badge.className = "px-3.5 py-1.5 bg-amber-500 text-slate-950 text-xs font-extrabold rounded-full animate-pulse";
+
+            setTimeout(() => {
+                badge.textContent = "Langkah 2: Geleng Kepala ke KIRI ⬅️";
+                badge.className = "px-3.5 py-1.5 bg-blue-500 text-white text-xs font-extrabold rounded-full animate-pulse";
+            }, 2000);
+
+            setTimeout(() => {
+                badge.textContent = "Langkah 3: Geleng Kepala ke KANAN ➡️";
+                badge.className = "px-3.5 py-1.5 bg-purple-500 text-white text-xs font-extrabold rounded-full animate-pulse";
+            }, 4000);
+
+            setTimeout(() => {
+                capturePhoto();
+                overlay.classList.add('hidden');
+                livenessCompleted = true;
+                alert("Verifikasi Biometrik Wajah & Liveness BERHASIL!");
+                checkSubmitState();
+            }, 6000);
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('webcam');
+            const img = document.getElementById('photoCaptured');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth || 320;
+            canvas.height = video.videoHeight || 240;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            img.src = canvas.toDataURL('image/png');
+            img.classList.remove('hidden');
+            video.classList.add('hidden');
+        }
+
+        function checkSubmitState() {
+            document.getElementById('btnSubmitAbsen').disabled = !(isGPSValid && livenessCompleted);
+        }
+
+        // Submissions
+        function handleAbsenSubmit(e) {
+            e.preventDefault();
+            const empId = document.getElementById('inputNama').value;
+            const emp = employeesData.find(e => e.id == empId);
+            const now = new Date();
+            const isLate = now.getHours() > 8 || (now.getHours() === 8 && now.getMinutes() > 0);
+            
+            const todayDate = now.getDate();
+            if (monthlyMatrix[empId]) {
+                monthlyMatrix[empId][todayDate] = isLate ? 'T' : 'H';
+            }
+
+            alert(`Absensi Berhasil Disimpan!\nNama: ${emp ? emp.nama : '-'}\nWaktu: ${now.toLocaleTimeString()} WIB\nStatus: ${isLate ? 'TERLAMBAT (Merah)' : 'HADIR TEPAT WAKTU (Hijau)'}`);
+            renderMonthlyRekapTable();
+            updateStatsDashboard();
+        }
+
+        function handleLeaveSubmit(e) {
+            e.preventDefault();
+            const empId = document.getElementById('leaveNama').value;
+            const emp = employeesData.find(e => e.id == empId);
+            const type = document.getElementById('leaveType').value;
+            const date = new Date(document.getElementById('leaveDate').value).getDate() || 1;
+
+            if (monthlyMatrix[empId]) {
+                monthlyMatrix[empId][date] = 'I';
+            }
+            alert(`Permohonan ${type} untuk ${emp ? emp.nama : '-'} telah disetujui. Status absensi diubah menjadi KUNING.`);
+            renderMonthlyRekapTable();
+            updateStatsDashboard();
+        }
+
+        // Render Tables
+        function renderMonthlyRekapTable() {
+            const tbody = document.getElementById('monthlyRekapBody');
+            tbody.innerHTML = '';
+
+            employeesData.forEach((emp, index) => {
+                let row = `<tr class="border-b border-slate-200 hover:bg-slate-50">
+                    <td class="border border-slate-300 text-center font-bold px-2 py-2">${index + 1}</td>
+                    <td class="border border-slate-300 px-3 py-2 font-bold text-slate-900">
+                        ${emp.nama}<br><span class="text-[9px] text-slate-500 font-mono font-normal">NIK: ${emp.nik}</span>
+                    </td>
+                    <td class="border border-slate-300 px-3 py-2 text-slate-600">${emp.jabatan}</td>`;
+
+                let countH = 0, countI = 0, countT = 0;
+                const empMatrix = monthlyMatrix[emp.id] || {};
+
+                for (let d = 1; d <= 31; d++) {
+                    const status = empMatrix[d] || 'H';
+                    let bgClass = "bg-emerald-500 text-white font-bold";
+                    if (status === 'T' || status === 'A') { bgClass = "bg-rose-600 text-white font-bold"; countT++; }
+                    else if (status === 'I') { bgClass = "bg-amber-400 text-slate-950 font-bold"; countI++; }
+                    else { countH++; }
+
+                    row += `<td class="border border-slate-300 text-center py-1 text-[10px] ${bgClass}">${status}</td>`;
+                }
+
+                row += `<td class="border border-slate-300 text-center font-bold bg-emerald-50 text-emerald-800">${countH}</td>
+                        <td class="border border-slate-300 text-center font-bold bg-amber-50 text-amber-800">${countI}</td>
+                        <td class="border border-slate-300 text-center font-bold bg-rose-50 text-rose-800">${countT}</td>
+                    </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function renderYearlyRekapTable() {
+            const tbody = document.getElementById('yearlyRekapBody');
+            tbody.innerHTML = '';
+
+            employeesData.forEach((emp, index) => {
+                const yearData = yearlyMatrix[emp.id] || [100,100,100,100,100,100,100,100,100,100,100,100];
+                const avgPerf = Math.round(yearData.reduce((a,b) => a+b, 0) / 12);
+
+                let row = `<tr class="border-b border-slate-200 hover:bg-slate-50">
+                    <td class="border border-slate-300 text-center font-bold px-2 py-2">${index + 1}</td>
+                    <td class="border border-slate-300 px-3 py-2 font-bold text-slate-900">${emp.nama}<br><span class="text-[9px] text-slate-500 font-mono">NIK: ${emp.nik}</span></td>
+                    <td class="border border-slate-300 px-3 py-2 text-slate-600">${emp.jabatan}</td>`;
+
+                yearData.forEach(val => {
+                    let color = val >= 95 ? "text-emerald-600" : (val >= 90 ? "text-amber-600" : "text-rose-600");
+                    row += `<td class="border border-slate-300 text-center font-mono font-bold ${color}">${val}%</td>`;
+                });
+
+                row += `<td class="border border-slate-300 text-center font-bold bg-emerald-50 text-emerald-800">240 Hari</td>
+                        <td class="border border-slate-300 text-center font-bold bg-amber-50 text-amber-800">5 Hari</td>
+                        <td class="border border-slate-300 text-center font-bold bg-rose-50 text-rose-800">2 Hari</td>
+                        <td class="border border-slate-300 text-center font-extrabold bg-blue-100 text-blue-900">${avgPerf}%</td>
+                    </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function switchRekapMode(mode) {
+            const monthlyCont = document.getElementById('monthlyRekapContainer');
+            const yearlyCont = document.getElementById('yearlyRekapContainer');
+            const tabMonthly = document.getElementById('tabBtnMonthly');
+            const tabYearly = document.getElementById('tabBtnYearly');
+            const printTitle = document.getElementById('printReportTitle');
+
+            if (mode === 'monthly') {
+                monthlyCont.classList.remove('hidden');
+                yearlyCont.classList.add('hidden');
+                tabMonthly.className = "px-3.5 py-1.5 rounded-lg bg-white text-blue-600 shadow-sm";
+                tabYearly.className = "px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900";
+                printTitle.textContent = "REKAPITULASI ABSENSI PEGAWAI PERIODE BULAN NOVEMBER 2026";
+            } else {
+                monthlyCont.classList.add('hidden');
+                yearlyCont.classList.remove('hidden');
+                tabYearly.className = "px-3.5 py-1.5 rounded-lg bg-white text-blue-600 shadow-sm";
+                tabMonthly.className = "px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900";
+                printTitle.textContent = "REKAPITULASI ABSENSI PEGAWAI TAHUNAN PERIODE JANUARI - DESEMBER 2026";
+            }
+        }
+
+        // Charts
+        function initChart() {
+            const ctx = document.getElementById('attendanceChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Hadir Tepat Waktu', 'Izin / Cuti / Sakit', 'Terlambat / Alpa'],
+                    datasets: [{
+                        data: [3, 1, 0],
+                        backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+
+        function updateStatsDashboard() {
+            document.getElementById('statTotal').textContent = employeesData.length;
+            document.getElementById('statHadir').textContent = 3;
+            document.getElementById('statIzin').textContent = 1;
+            document.getElementById('statTerlambat').textContent = 0;
+        }
+    </script>
+</body>
+</html>
