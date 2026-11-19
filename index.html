@@ -102,7 +102,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-xl font-extrabold text-slate-900">Dashboard Statistik Kehadiran</h2>
-                    <p class="text-xs text-slate-500">Ringkasan statistik dan grafik visualisasi presensi pegawai real-time</p>
+                    <p class="text-xs text-slate-500">Ringkasan statistik dan grafik visualisasi presensi pegawai hari ini</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <button onclick="syncAllDataFromCloud()" class="text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-full border border-slate-300 transition flex items-center gap-1.5">
@@ -163,9 +163,12 @@
 
             <!-- Visualisasi Grafik -->
             <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4">
-                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <i class="fa-solid fa-chart-pie text-blue-600"></i> Persentase Kehadiran Pegawai Hari Ini
-                </h3>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-blue-600"></i> Persentase Kehadiran Pegawai Hari Ini
+                    </h3>
+                    <span id="statBelumAbsenBadge" class="text-xs text-slate-500 font-medium">Belum absen hari ini: 0 pegawai</span>
+                </div>
                 <div class="h-64 relative flex items-center justify-center">
                     <canvas id="attendanceChart"></canvas>
                 </div>
@@ -275,7 +278,7 @@
                 <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
                     <i class="fa-solid fa-file-signature text-amber-500"></i> Form Permohonan Izin / Cuti / Sakit
                 </h3>
-                <p class="text-xs text-slate-500">Permohonan resmi yang secara otomatis memperbarui indikator rekapitulasi menjadi warna Kuning</p>
+                <p class="text-xs text-slate-500">Permohonan resmi yang secara otomatis memperbarui indikator rekapitulasi menjadi warna Kuning pada tanggal yang dipilih</p>
             </div>
 
             <form id="leaveForm" onsubmit="handleLeaveSubmit(event)" class="space-y-4">
@@ -352,7 +355,7 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 no-print border-b border-slate-100 pb-6">
                 <div>
                     <h2 class="text-xl font-extrabold text-slate-900">Rekapitulasi Kehadiran Karyawan</h2>
-                    <p class="text-xs text-slate-500">Laporan bulanan (Tgl 1-31) & tahunan (Jan-Des) lengkap dengan kode warna resmi</p>
+                    <p class="text-xs text-slate-500">Laporan bulanan (Tgl 1-31) & tahunan (Jan-Des) — terisi sesuai tanggal kehadiran masing-masing pegawai</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
@@ -390,16 +393,19 @@
             </div>
 
             <!-- Indikator Kode Warna -->
-            <div class="flex flex-wrap items-center gap-4 text-xs font-semibold p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div class="flex flex-wrap items-center gap-3 text-xs font-semibold p-3 bg-slate-50 rounded-xl border border-slate-200">
                 <span class="text-slate-500 font-bold uppercase text-[10px]">Indikator Warna:</span>
                 <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> HADIR Tepat Waktu (&lt;= 08:00 WIB)
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> H = Hadir Tepat Waktu (&lt;= 08:00 WIB)
                 </span>
                 <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-rose-100 text-rose-800 border border-rose-300">
-                    <span class="w-2.5 h-2.5 rounded-full bg-rose-600"></span> TERLAMBAT (&gt; 08:00 WIB) / ALPA
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-600"></span> T/A = Terlambat (&gt; 08:00 WIB) / Alpa
                 </span>
                 <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-100 text-amber-800 border border-amber-300">
-                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> IZIN / CUTI / SAKIT
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> I = Izin / Cuti / Sakit
+                </span>
+                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-white text-slate-600 border border-slate-300">
+                    <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span> - = Belum Ada Catatan Kehadiran
                 </span>
             </div>
 
@@ -671,8 +677,9 @@
         ];
 
         let employeesData = JSON.parse(localStorage.getItem('perumda_employees')) || [...defaultEmployees];
-        let monthlyMatrix = JSON.parse(localStorage.getItem('perumda_matrix')) || {};
-        let yearlyAttendances = []; // Menyimpan data absensi 1 tahun penuh dari Cloud/Local
+        // Matrix bulanan hanya menyimpan tanggal yang benar-benar ada catatan absensi/izin (TIDAK auto-isi H semua tanggal)
+        let monthlyMatrix = JSON.parse(localStorage.getItem('perumda_matrix_v2')) || {};
+        let yearlyAttendances = [];
 
         let isGPSValid = false;
         let livenessCompleted = false;
@@ -850,22 +857,26 @@
 
                 yearlyAttendances = attRows || [];
 
-                // Bangun ulang matrix bulan berjalan
-                ensureLocalMatrixInitialized();
-                if (yearlyAttendances.length > 0) {
-                    yearlyAttendances.forEach(row => {
-                        const parts = row.date.split('-');
-                        const rowMonth = parseInt(parts[1], 10);
-                        const rowDay = parseInt(parts[2], 10);
-                        const empId = row.employee_id;
+                // Reset & Bangun ulang matrix bulan berjalan HANYA dari catatan kehadiran yang ada
+                const freshMatrix = {};
+                employeesData.forEach(emp => {
+                    freshMatrix[emp.id] = {};
+                });
 
-                        if (rowMonth === currentMonth) {
-                            if (!monthlyMatrix[empId]) monthlyMatrix[empId] = {};
-                            monthlyMatrix[empId][rowDay] = row.status;
-                        }
-                    });
-                    localStorage.setItem('perumda_matrix', JSON.stringify(monthlyMatrix));
-                }
+                yearlyAttendances.forEach(row => {
+                    const parts = row.date.split('-');
+                    const rowMonth = parseInt(parts[1], 10);
+                    const rowDay = parseInt(parts[2], 10);
+                    const empId = row.employee_id;
+
+                    if (rowMonth === currentMonth) {
+                        if (!freshMatrix[empId]) freshMatrix[empId] = {};
+                        freshMatrix[empId][rowDay] = row.status;
+                    }
+                });
+
+                monthlyMatrix = freshMatrix;
+                localStorage.setItem('perumda_matrix_v2', JSON.stringify(monthlyMatrix));
 
                 refreshAllUI();
             } catch (err) {
@@ -877,12 +888,10 @@
         }
 
         function ensureLocalMatrixInitialized() {
+            // Biarkan objek bulan karyawan kosong ({}) sampai benar-benar ada tanggal kehadiran/izin
             employeesData.forEach(emp => {
                 if (!monthlyMatrix[emp.id]) {
                     monthlyMatrix[emp.id] = {};
-                    for (let d = 1; d <= 31; d++) {
-                        monthlyMatrix[emp.id][d] = 'H';
-                    }
                 }
             });
         }
@@ -1056,7 +1065,6 @@
             if (!emp || !confirm(`Apakah Anda yakin ingin menghapus karyawan "${emp.nama}"?`)) return;
 
             if (isCloudConnected && sbClient) {
-                // Bersihkan data absensi terkait agar tidak yatim jika tidak ada cascade
                 await sbClient.from('attendances').delete().eq('employee_id', emp.id);
                 const { error } = await sbClient.from('employees').delete().eq('id', emp.id);
                 if (error) {
@@ -1066,10 +1074,10 @@
             }
 
             employeesData = employeesData.filter(e => String(e.id) !== String(id));
-            delete monthlyMatrix[id];
-            yearlyAttendances = yearlyAttendances.filter(a => String(a.employee_id) !== String(id));
+            delete monthlyMatrix[emp.id];
+            yearlyAttendances = yearlyAttendances.filter(a => String(a.employee_id) !== String(emp.id));
             localStorage.setItem('perumda_employees', JSON.stringify(employeesData));
-            localStorage.setItem('perumda_matrix', JSON.stringify(monthlyMatrix));
+            localStorage.setItem('perumda_matrix_v2', JSON.stringify(monthlyMatrix));
             refreshAllUI();
         }
 
@@ -1115,10 +1123,12 @@
                     if (data && data.length > 0) newId = data[0].id;
                 }
                 employeesData.push({ id: newId, nama, nik, tgl_lahir, jabatan });
-                ensureLocalMatrixInitialized();
+                // Karyawan baru dimulai dengan catatan kehadiran kosong ({})
+                monthlyMatrix[newId] = {};
             }
 
             localStorage.setItem('perumda_employees', JSON.stringify(employeesData));
+            localStorage.setItem('perumda_matrix_v2', JSON.stringify(monthlyMatrix));
             closeEmployeeModal();
             refreshAllUI();
         }
@@ -1296,10 +1306,14 @@
 
             if (!monthlyMatrix[emp.id]) monthlyMatrix[emp.id] = {};
             monthlyMatrix[emp.id][todayDate] = statusCode;
-            localStorage.setItem('perumda_matrix', JSON.stringify(monthlyMatrix));
+            localStorage.setItem('perumda_matrix_v2', JSON.stringify(monthlyMatrix));
             upsertLocalAttendanceRecord(emp.id, isoDate, statusCode);
 
-            alert(`Absensi Berhasil Disimpan${isCloudConnected ? ' ke Cloud Supabase' : ''}!\nNama: ${emp.nama}\nWaktu: ${now.toLocaleTimeString()} WIB\nStatus: ${isLate ? 'TERLAMBAT (Merah)' : 'HADIR TEPAT WAKTU (Hijau)'}`);
+            alert(`Absensi Berhasil Disimpan${isCloudConnected ? ' ke Cloud Supabase' : ''}!
+Nama: ${emp.nama}
+Tanggal: ${isoDate}
+Waktu: ${now.toLocaleTimeString()} WIB
+Status: ${isLate ? 'TERLAMBAT (Merah)' : 'HADIR TEPAT WAKTU (Hijau)'}`);
             renderMonthlyRekapTable();
             renderYearlyRekapTable();
             updateStatsDashboard();
@@ -1317,9 +1331,12 @@
             const type = document.getElementById('leaveType').value;
             const dateVal = document.getElementById('leaveDate').value;
             const dateParts = dateVal.split('-');
+            const selYear = parseInt(dateParts[0], 10);
             const selMonth = parseInt(dateParts[1], 10);
             const dayNum = parseInt(dateParts[2], 10) || 1;
-            const currentMonth = new Date().getMonth() + 1;
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth() + 1;
 
             if (isCloudConnected && sbClient) {
                 await sbClient.from('attendances').delete().match({ employee_id: emp.id, date: dateVal });
@@ -1334,14 +1351,14 @@
                 }
             }
 
-            if (selMonth === currentMonth) {
+            if (selYear === currentYear && selMonth === currentMonth) {
                 if (!monthlyMatrix[emp.id]) monthlyMatrix[emp.id] = {};
                 monthlyMatrix[emp.id][dayNum] = 'I';
-                localStorage.setItem('perumda_matrix', JSON.stringify(monthlyMatrix));
+                localStorage.setItem('perumda_matrix_v2', JSON.stringify(monthlyMatrix));
             }
             upsertLocalAttendanceRecord(emp.id, dateVal, 'I');
 
-            alert(`Permohonan ${type} untuk ${emp.nama} telah disetujui${isCloudConnected ? ' & tersimpan di Supabase' : ''}. Status absensi diubah menjadi KUNING.`);
+            alert(`Permohonan ${type} untuk ${emp.nama} tanggal ${dateVal} telah disetujui${isCloudConnected ? ' & tersimpan di Supabase' : ''}. Status absensi diubah menjadi KUNING.`);
             renderMonthlyRekapTable();
             renderYearlyRekapTable();
             updateStatsDashboard();
@@ -1364,13 +1381,25 @@
                 const empMatrix = monthlyMatrix[emp.id] || {};
 
                 for (let d = 1; d <= 31; d++) {
-                    const status = empMatrix[d] || 'H';
-                    let bgClass = "bg-emerald-500 text-white font-bold";
-                    if (status === 'T' || status === 'A') { bgClass = "bg-rose-600 text-white font-bold"; countT++; }
-                    else if (status === 'I') { bgClass = "bg-amber-400 text-slate-950 font-bold"; countI++; }
-                    else { countH++; }
+                    const status = empMatrix[d] || '';
+                    let bgClass = "bg-white text-slate-300";
+                    let label = "-";
 
-                    row += `<td class="border border-slate-300 text-center py-1 text-[10px] ${bgClass}">${status}</td>`;
+                    if (status === 'H') {
+                        bgClass = "bg-emerald-500 text-white font-bold";
+                        label = "H";
+                        countH++;
+                    } else if (status === 'T' || status === 'A') {
+                        bgClass = "bg-rose-600 text-white font-bold";
+                        label = status;
+                        countT++;
+                    } else if (status === 'I') {
+                        bgClass = "bg-amber-400 text-slate-950 font-bold";
+                        label = "I";
+                        countI++;
+                    }
+
+                    row += `<td class="border border-slate-300 text-center py-1 text-[10px] ${bgClass}">${label}</td>`;
                 }
 
                 row += `<td class="border border-slate-300 text-center font-bold bg-emerald-50 text-emerald-800">${countH}</td>
@@ -1404,27 +1433,32 @@
                         recordsInMonth.forEach(r => {
                             if (r.status === 'I') mI++;
                             else if (r.status === 'T' || r.status === 'A') mT++;
-                            else mH++;
+                            else if (r.status === 'H') mH++;
                         });
                         totalHadir += mH;
                         totalIzin += mI;
                         totalAlpaTerlambat += mT;
-                        const pct = Math.round(((mH + mI) / recordsInMonth.length) * 100);
+                        const totalRecorded = mH + mI + mT;
+                        const pct = totalRecorded > 0 ? Math.round(((mH + mI) / totalRecorded) * 100) : null;
                         monthlyPercentages.push(pct);
                     } else if (m === currentMonth && monthlyMatrix[emp.id]) {
-                        // Fallback dari matrix bulan berjalan jika belum ada di yearlyAttendances
+                        // Hitung hanya dari tanggal yang sudah memiliki catatan absensi di bulan berjalan
                         let mH = 0, mI = 0, mT = 0;
-                        for (let d = 1; d <= 31; d++) {
-                            const st = monthlyMatrix[emp.id][d] || 'H';
+                        Object.values(monthlyMatrix[emp.id]).forEach(st => {
                             if (st === 'I') mI++;
                             else if (st === 'T' || st === 'A') mT++;
-                            else mH++;
+                            else if (st === 'H') mH++;
+                        });
+                        const totalRecorded = mH + mI + mT;
+                        if (totalRecorded > 0) {
+                            totalHadir += mH;
+                            totalIzin += mI;
+                            totalAlpaTerlambat += mT;
+                            const pct = Math.round(((mH + mI) / totalRecorded) * 100);
+                            monthlyPercentages.push(pct);
+                        } else {
+                            monthlyPercentages.push(null);
                         }
-                        totalHadir += mH;
-                        totalIzin += mI;
-                        totalAlpaTerlambat += mT;
-                        const pct = Math.round(((mH + mI) / 31) * 100);
-                        monthlyPercentages.push(pct);
                     } else {
                         monthlyPercentages.push(null);
                     }
@@ -1432,8 +1466,8 @@
 
                 const validMonths = monthlyPercentages.filter(v => v !== null);
                 const avgPerf = validMonths.length > 0
-                    ? Math.round(validMonths.reduce((a, b) => a + b, 0) / validMonths.length)
-                    : 100;
+                    ? `${Math.round(validMonths.reduce((a, b) => a + b, 0) / validMonths.length)}%`
+                    : '-';
 
                 let row = `<tr class="border-b border-slate-200 hover:bg-slate-50">
                     <td class="border border-slate-300 text-center font-bold px-2 py-2">${index + 1}</td>
@@ -1452,7 +1486,7 @@
                 row += `<td class="border border-slate-300 text-center font-bold bg-emerald-50 text-emerald-800">${totalHadir} Hari</td>
                         <td class="border border-slate-300 text-center font-bold bg-amber-50 text-amber-800">${totalIzin} Hari</td>
                         <td class="border border-slate-300 text-center font-bold bg-rose-50 text-rose-800">${totalAlpaTerlambat} Hari</td>
-                        <td class="border border-slate-300 text-center font-extrabold bg-blue-100 text-blue-900">${avgPerf}%</td>
+                        <td class="border border-slate-300 text-center font-extrabold bg-blue-100 text-blue-900">${avgPerf}</td>
                     </tr>`;
                 tbody.innerHTML += row;
             });
@@ -1503,19 +1537,21 @@
 
         function updateStatsDashboard() {
             const today = new Date().getDate();
-            let hadir = 0, izin = 0, terlambat = 0;
+            let hadir = 0, izin = 0, terlambat = 0, belumAbsen = 0;
 
             employeesData.forEach(emp => {
-                const status = (monthlyMatrix[emp.id] && monthlyMatrix[emp.id][today]) || 'H';
-                if (status === 'I') izin++;
+                const status = monthlyMatrix[emp.id] ? monthlyMatrix[emp.id][today] : '';
+                if (status === 'H') hadir++;
+                else if (status === 'I') izin++;
                 else if (status === 'T' || status === 'A') terlambat++;
-                else hadir++;
+                else belumAbsen++;
             });
 
             document.getElementById('statTotal').textContent = employeesData.length;
             document.getElementById('statHadir').textContent = hadir;
             document.getElementById('statIzin').textContent = izin;
             document.getElementById('statTerlambat').textContent = terlambat;
+            document.getElementById('statBelumAbsenBadge').textContent = `Belum absen hari ini: ${belumAbsen} pegawai`;
 
             if (chartInstance) {
                 chartInstance.data.datasets[0].data = [hadir, izin, terlambat];
