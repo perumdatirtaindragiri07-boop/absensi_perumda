@@ -68,7 +68,7 @@
                     <div class="h-6 w-px bg-slate-800 hidden sm:block"></div>
                     <div class="text-right hidden sm:block">
                         <div id="liveClock" class="font-mono text-sm font-bold text-blue-400">00:00:00 WIB</div>
-                        <div id="liveDate" class="text-[11px] text-slate-400">Kamis, 19 November 2026</div>
+                        <div id="liveDate" class="text-[11px] text-slate-400">Memuat tanggal...</div>
                     </div>
                 </div>
             </div>
@@ -109,7 +109,7 @@
                         <i class="fa-solid fa-rotate"></i> Sync Data
                     </button>
                     <span id="periodeBadge" class="text-xs font-semibold bg-blue-50 text-blue-700 px-3.5 py-1.5 rounded-full border border-blue-200">
-                        Periode: November 2026
+                        Periode Berjalan
                     </span>
                 </div>
             </div>
@@ -217,12 +217,18 @@
                         <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                             <i class="fa-solid fa-map-pin text-red-500"></i> Validasi Geolocation GPS Kantor
                         </span>
-                        <button type="button" onclick="checkGPSLocation()" class="text-xs text-blue-600 font-semibold hover:underline">
-                            <i class="fa-solid fa-rotate-right mr-1"></i> Refresh Posisi
-                        </button>
+                        <div class="flex items-center gap-3">
+                            <label class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 cursor-pointer">
+                                <input type="checkbox" id="bypassGpsToggle" onchange="checkGPSLocation()" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                Mode Uji (Bypass Radius)
+                            </label>
+                            <button type="button" onclick="checkGPSLocation()" class="text-xs text-blue-600 font-semibold hover:underline">
+                                <i class="fa-solid fa-rotate-right mr-1"></i> Refresh Posisi
+                            </button>
+                        </div>
                     </div>
                     <div class="text-xs text-slate-600 space-y-1">
-                        <p><strong>Titik Koordinat Resmi:</strong> Perumda Tirta Indragiri, Jl. M. Boya No. 07 (-0.3255, 103.1568)</p>
+                        <p><strong>Titik Koordinat Resmi:</strong> Perumda Tirta Indragiri, Jl. M. Boya No. 07 (-0.3255, 103.1568) • Radius Maks: 150m</p>
                         <p id="gpsStatusText" class="text-amber-600 font-medium">Memeriksa lokasi GPS Anda...</p>
                     </div>
                 </div>
@@ -379,7 +385,7 @@
                     </div>
                 </div>
                 <h2 id="printReportTitle" class="text-sm font-extrabold text-slate-900 uppercase underline decoration-2 mt-4">
-                    REKAPITULASI ABSENSI PEGAWAI PERIODE BULAN NOVEMBER 2026
+                    REKAPITULASI ABSENSI PEGAWAI
                 </h2>
             </div>
 
@@ -408,15 +414,8 @@
                             <th class="border border-slate-300 py-1" colspan="31">TANGGAL BULAN BERJALAN (1 - 31)</th>
                             <th class="border border-slate-300 px-2 py-1 bg-emerald-200 text-emerald-900 text-center" colspan="3">AKUMULASI</th>
                         </tr>
-                        <tr class="bg-slate-50 text-slate-600 text-[10px] text-center">
-                            <script>
-                                for(let d=1; d<=31; d++){
-                                    document.write(`<th class="border border-slate-300 w-6 font-mono">${d}</th>`);
-                                }
-                            </script>
-                            <th class="border border-slate-300 bg-emerald-100 text-emerald-900 font-bold px-1.5">H</th>
-                            <th class="border border-slate-300 bg-amber-100 text-amber-900 font-bold px-1.5">I/C/S</th>
-                            <th class="border border-slate-300 bg-rose-100 text-rose-900 font-bold px-1.5">T/A</th>
+                        <tr id="monthlyDaysHeaderRow" class="bg-slate-50 text-slate-600 text-[10px] text-center">
+                            <!-- Di-generate oleh JS -->
                         </tr>
                     </thead>
                     <tbody id="monthlyRekapBody">
@@ -451,7 +450,7 @@
                             <th class="border border-slate-300 px-1 py-1">DES</th>
                             <th class="border border-slate-300 bg-emerald-100 text-emerald-900 font-bold px-2">HADIR</th>
                             <th class="border border-slate-300 bg-amber-100 text-amber-900 font-bold px-2">IZIN</th>
-                            <th class="border border-slate-300 bg-rose-100 text-rose-900 font-bold px-2">ALPA</th>
+                            <th class="border border-slate-300 bg-rose-100 text-rose-900 font-bold px-2">T/A</th>
                             <th class="border border-slate-300 bg-blue-100 text-blue-900 font-bold px-2">% PERF</th>
                         </tr>
                     </thead>
@@ -494,7 +493,7 @@
                     <!-- KOLOM 3 (KANAN) -->
                     <div class="flex flex-col justify-between px-2">
                         <div>
-                            <p class="text-xs text-slate-600 font-medium mb-0.5">Tembilahan, 30 November 2026</p>
+                            <p id="signatureDateText" class="text-xs text-slate-600 font-medium mb-0.5">Tembilahan, 30 November 2026</p>
                             <p class="text-xs font-bold text-slate-800 uppercase tracking-wider">Dibuat Oleh:</p>
                             <p class="text-xs font-semibold text-slate-600 mt-0.5">Kasubbag Umum dan Kepegawaian</p>
                         </div>
@@ -523,7 +522,7 @@
 
             <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 space-y-1">
                 <p class="font-bold"><i class="fa-solid fa-circle-info mr-1"></i> Panduan Koneksi:</p>
-                <p>Masukkan <strong>Project URL</strong> dan <strong>Anon Public Key</strong> dari dashboard Supabase Anda (Menu <em>Project Settings &gt; API</em>). Kredensial akan tersimpan otomatis di browser ini.</p>
+                <p>Masukkan <strong>Project URL</strong> (contoh: <code>https://xxxx.supabase.co</code>) dan <strong>Anon Public Key</strong> dari dashboard Supabase Anda (Menu <em>Project Settings &gt; API</em>).</p>
             </div>
 
             <form id="supabaseConfigForm" onsubmit="saveSupabaseConfig(event)" class="space-y-4">
@@ -654,10 +653,10 @@
         // Target Koordinat Perumda Jl. M. Boya No. 07 Tembilahan
         const OFFICE_LAT = -0.3255;
         const OFFICE_LNG = 103.1568;
-        const MAX_RADIUS_METERS = 150; 
+        const MAX_RADIUS_METERS = 150;
 
-        // Kredensial Default (Opsional: bisa langsung diisi hardcode di sini jika ingin semua HP otomatis terhubung)
-        const DEFAULT_SUPABASE_URL = "https://vqmrgprnuatxseqeimlu.supabase.co/rest/v1/; 
+        // Kredensial Default Supabase (Gunakan Base Project URL tanpa /rest/v1/ dan Anon Key)
+        const DEFAULT_SUPABASE_URL = "https://vqmrgprnuatxseqeimlu.supabase.co";
         const DEFAULT_SUPABASE_KEY = "sb_publishable_TWIHZffhMX-nLKNpQXZ_AA_qZ9lB0Av";
 
         let sbClient = null;
@@ -673,25 +672,27 @@
 
         let employeesData = JSON.parse(localStorage.getItem('perumda_employees')) || [...defaultEmployees];
         let monthlyMatrix = JSON.parse(localStorage.getItem('perumda_matrix')) || {};
-        let yearlyMatrix = {
-            1: [95, 98, 100, 92, 96, 98, 97, 100, 94, 96, 98, 100],
-            2: [100, 100, 98, 100, 96, 100, 100, 98, 100, 98, 100, 100],
-            3: [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100],
-            4: [88, 90, 85, 92, 89, 94, 91, 93, 88, 95, 92, 90]
-        };
+        let yearlyAttendances = []; // Menyimpan data absensi 1 tahun penuh dari Cloud/Local
 
         let isGPSValid = false;
         let livenessCompleted = false;
         let videoStream = null;
         let chartInstance = null;
+        let currentRekapMode = 'monthly';
 
         // ================= INITIALIZATION =================
         window.addEventListener('DOMContentLoaded', async () => {
+            buildMonthlyHeaderRow();
+            updateDynamicPeriodLabels();
             loadSavedLogo();
             updateLiveClock();
             setInterval(updateLiveClock, 1000);
             checkGPSLocation();
             initChart();
+
+            // Set default tanggal izin ke hari ini
+            const todayIso = new Date().toISOString().split('T')[0];
+            document.getElementById('leaveDate').value = todayIso;
 
             // Cek Koneksi Supabase
             initSupabaseFromStorage();
@@ -703,10 +704,47 @@
             }
         });
 
+        function buildMonthlyHeaderRow() {
+            const tr = document.getElementById('monthlyDaysHeaderRow');
+            let html = '';
+            for (let d = 1; d <= 31; d++) {
+                html += `<th class="border border-slate-300 w-6 font-mono">${d}</th>`;
+            }
+            html += `
+                <th class="border border-slate-300 bg-emerald-100 text-emerald-900 font-bold px-1.5">H</th>
+                <th class="border border-slate-300 bg-amber-100 text-amber-900 font-bold px-1.5">I/C/S</th>
+                <th class="border border-slate-300 bg-rose-100 text-rose-900 font-bold px-1.5">T/A</th>
+            `;
+            tr.innerHTML = html;
+        }
+
+        function updateDynamicPeriodLabels() {
+            const now = new Date();
+            const monthName = now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+            const monthUpper = monthName.toUpperCase();
+            const year = now.getFullYear();
+            const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
+
+            document.getElementById('periodeBadge').textContent = `Periode: ${monthName}`;
+            document.getElementById('signatureDateText').textContent = `Tembilahan, ${lastDay} ${monthName}`;
+
+            const printTitle = document.getElementById('printReportTitle');
+            if (currentRekapMode === 'monthly') {
+                printTitle.textContent = `REKAPITULASI ABSENSI PEGAWAI PERIODE BULAN ${monthUpper}`;
+            } else {
+                printTitle.textContent = `REKAPITULASI ABSENSI PEGAWAI TAHUNAN PERIODE JANUARI - DESEMBER ${year}`;
+            }
+        }
+
         // ================= SUPABASE ENGINE =================
+        function normalizeSupabaseUrl(rawUrl) {
+            if (!rawUrl) return "";
+            return rawUrl.trim().replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '');
+        }
+
         function initSupabaseFromStorage() {
-            const savedUrl = localStorage.getItem('perumda_sb_url') || DEFAULT_SUPABASE_URL;
-            const savedKey = localStorage.getItem('perumda_sb_key') || DEFAULT_SUPABASE_KEY;
+            const savedUrl = normalizeSupabaseUrl(localStorage.getItem('perumda_sb_url') || DEFAULT_SUPABASE_URL);
+            const savedKey = (localStorage.getItem('perumda_sb_key') || DEFAULT_SUPABASE_KEY || '').trim();
 
             if (savedUrl && savedKey && window.supabase) {
                 try {
@@ -748,7 +786,7 @@
 
         async function saveSupabaseConfig(e) {
             e.preventDefault();
-            const url = document.getElementById('sbUrlInput').value.trim();
+            const url = normalizeSupabaseUrl(document.getElementById('sbUrlInput').value);
             const key = document.getElementById('sbKeyInput').value.trim();
 
             localStorage.setItem('perumda_sb_url', url);
@@ -795,29 +833,36 @@
                     localStorage.setItem('perumda_employees', JSON.stringify(employeesData));
                 }
 
-                // 2. Ambil Data Absensi Bulan Berjalan dari tabel 'attendances'
+                // 2. Ambil Data Absensi 1 Tahun Penuh dari tabel 'attendances'
                 const now = new Date();
                 const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const startDate = `${year}-${month}-01`;
-                const endDate = `${year}-${month}-31`;
+                const currentMonth = now.getMonth() + 1;
+                const startYearDate = `${year}-01-01`;
+                const endYearDate = `${year}-12-31`;
 
                 const { data: attRows, error: attErr } = await sbClient
                     .from('attendances')
                     .select('*')
-                    .gte('date', startDate)
-                    .lte('date', endDate);
+                    .gte('date', startYearDate)
+                    .lte('date', endYearDate);
 
                 if (attErr) throw attErr;
 
-                // Reset & Bangun ulang matrix bulan berjalan
+                yearlyAttendances = attRows || [];
+
+                // Bangun ulang matrix bulan berjalan
                 ensureLocalMatrixInitialized();
-                if (attRows && attRows.length > 0) {
-                    attRows.forEach(row => {
+                if (yearlyAttendances.length > 0) {
+                    yearlyAttendances.forEach(row => {
+                        const parts = row.date.split('-');
+                        const rowMonth = parseInt(parts[1], 10);
+                        const rowDay = parseInt(parts[2], 10);
                         const empId = row.employee_id;
-                        const day = parseInt(row.date.split('-')[2], 10);
-                        if (!monthlyMatrix[empId]) monthlyMatrix[empId] = {};
-                        monthlyMatrix[empId][day] = row.status;
+
+                        if (rowMonth === currentMonth) {
+                            if (!monthlyMatrix[empId]) monthlyMatrix[empId] = {};
+                            monthlyMatrix[empId][rowDay] = row.status;
+                        }
                     });
                     localStorage.setItem('perumda_matrix', JSON.stringify(monthlyMatrix));
                 }
@@ -825,7 +870,7 @@
                 refreshAllUI();
             } catch (err) {
                 console.error("Gagal sinkronisasi Supabase:", err);
-                alert("Peringatan Sinkronisasi Supabase: " + err.message + "\nPastikan tabel 'employees' dan 'attendances' sudah dibuat dan RLS sudah diatur.");
+                alert("Peringatan Sinkronisasi Supabase: " + err.message + "\nPastikan tabel 'employees' dan 'attendances' sudah dibuat dan RLS policy mengizinkan akses.");
                 ensureLocalMatrixInitialized();
                 refreshAllUI();
             }
@@ -838,9 +883,6 @@
                     for (let d = 1; d <= 31; d++) {
                         monthlyMatrix[emp.id][d] = 'H';
                     }
-                }
-                if (!yearlyMatrix[emp.id]) {
-                    yearlyMatrix[emp.id] = [98, 99, 100, 97, 98, 100, 99, 100, 98, 99, 100, 100];
                 }
             });
         }
@@ -947,10 +989,10 @@
                     <td class="border border-slate-200 px-4 py-2 text-slate-600">${tgl}</td>
                     <td class="border border-slate-200 px-4 py-2 text-slate-700 font-semibold">${emp.jabatan}</td>
                     <td class="border border-slate-200 px-4 py-2 text-center space-x-1">
-                        <button onclick="editEmployee(${emp.id})" class="p-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-xs font-bold transition" title="Edit Data">
+                        <button onclick="editEmployee('${emp.id}')" class="p-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-xs font-bold transition" title="Edit Data">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>
-                        <button onclick="deleteEmployee(${emp.id})" class="p-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-lg text-xs font-bold transition" title="Hapus Data">
+                        <button onclick="deleteEmployee('${emp.id}')" class="p-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-lg text-xs font-bold transition" title="Hapus Data">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </td>
@@ -972,7 +1014,7 @@
         }
 
         function autoFillEmployeeData(empId) {
-            const emp = employeesData.find(e => e.id == empId);
+            const emp = employeesData.find(e => String(e.id) === String(empId));
             if (emp) {
                 document.getElementById('inputNIK').value = emp.nik;
                 document.getElementById('inputTglLahir').value = emp.tgl_lahir || emp.tglLahir || '';
@@ -998,7 +1040,7 @@
         function closeEmployeeModal() { document.getElementById('employeeModal').classList.add('hidden'); }
 
         function editEmployee(id) {
-            const emp = employeesData.find(e => e.id == id);
+            const emp = employeesData.find(e => String(e.id) === String(id));
             if (emp) {
                 document.getElementById('empEditId').value = emp.id;
                 document.getElementById('empNama').value = emp.nama;
@@ -1010,20 +1052,22 @@
         }
 
         async function deleteEmployee(id) {
-            const emp = employeesData.find(e => e.id == id);
+            const emp = employeesData.find(e => String(e.id) === String(id));
             if (!emp || !confirm(`Apakah Anda yakin ingin menghapus karyawan "${emp.nama}"?`)) return;
 
             if (isCloudConnected && sbClient) {
-                const { error } = await sbClient.from('employees').delete().eq('id', id);
+                // Bersihkan data absensi terkait agar tidak yatim jika tidak ada cascade
+                await sbClient.from('attendances').delete().eq('employee_id', emp.id);
+                const { error } = await sbClient.from('employees').delete().eq('id', emp.id);
                 if (error) {
                     alert("Gagal menghapus dari Supabase: " + error.message);
                     return;
                 }
             }
 
-            employeesData = employeesData.filter(e => e.id != id);
+            employeesData = employeesData.filter(e => String(e.id) !== String(id));
             delete monthlyMatrix[id];
-            delete yearlyMatrix[id];
+            yearlyAttendances = yearlyAttendances.filter(a => String(a.employee_id) !== String(id));
             localStorage.setItem('perumda_employees', JSON.stringify(employeesData));
             localStorage.setItem('perumda_matrix', JSON.stringify(monthlyMatrix));
             refreshAllUI();
@@ -1038,22 +1082,24 @@
             const jabatan = document.getElementById('empJabatan').value.trim();
 
             if (editId) {
+                const existingEmp = employeesData.find(e => String(e.id) === String(editId));
+                const targetId = existingEmp ? existingEmp.id : editId;
+
                 if (isCloudConnected && sbClient) {
                     const { error } = await sbClient
                         .from('employees')
                         .update({ nama, nik, tgl_lahir, jabatan })
-                        .eq('id', editId);
+                        .eq('id', targetId);
                     if (error) {
                         alert("Gagal memperbarui data di Supabase: " + error.message);
                         return;
                     }
                 }
-                const emp = employeesData.find(e => e.id == editId);
-                if (emp) {
-                    emp.nama = nama;
-                    emp.nik = nik;
-                    emp.tgl_lahir = tgl_lahir;
-                    emp.jabatan = jabatan;
+                if (existingEmp) {
+                    existingEmp.nama = nama;
+                    existingEmp.nik = nik;
+                    existingEmp.tgl_lahir = tgl_lahir;
+                    existingEmp.jabatan = jabatan;
                 }
             } else {
                 let newId = Date.now();
@@ -1088,13 +1134,23 @@
         // ================= GPS & BIOMETRICS =================
         function checkGPSLocation() {
             const statusEl = document.getElementById('gpsStatusText');
+            const bypassMode = document.getElementById('bypassGpsToggle').checked;
+
+            if (bypassMode) {
+                isGPSValid = true;
+                statusEl.className = "text-blue-600 font-bold flex items-center gap-1";
+                statusEl.innerHTML = `<i class="fa-solid fa-flask"></i> Mode Uji Aktif: Validasi radius kantor diabaikan untuk pengujian.`;
+                checkSubmitState();
+                return;
+            }
+
             statusEl.className = "text-amber-600 font-medium";
             statusEl.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-1'></i> Memverifikasi koordinat GPS HP/Perangkat Anda...";
 
             if (!navigator.geolocation) {
-                isGPSValid = true;
-                statusEl.className = "text-emerald-600 font-bold";
-                statusEl.textContent = "Mode Desktop: GPS Kantor Terhubung.";
+                isGPSValid = false;
+                statusEl.className = "text-rose-600 font-bold";
+                statusEl.textContent = "Browser/perangkat tidak mendukung Geolocation GPS.";
                 checkSubmitState();
                 return;
             }
@@ -1105,24 +1161,24 @@
                     const userLng = position.coords.longitude;
                     const distance = calculateDistance(userLat, userLng, OFFICE_LAT, OFFICE_LNG);
 
-                    if (distance <= MAX_RADIUS_METERS || true) { 
+                    if (distance <= MAX_RADIUS_METERS) {
                         isGPSValid = true;
                         statusEl.className = "text-emerald-600 font-bold flex items-center gap-1";
-                        statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Lokasi Terverifikasi di Kantor (Jarak: ${Math.round(distance)}m dari titik nol Perumda M. Boya No. 07)`;
-                        checkSubmitState();
+                        statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Lokasi Terverifikasi di Kantor (Jarak: ${Math.round(distance)}m dari Perumda Jl. M. Boya No. 07)`;
                     } else {
                         isGPSValid = false;
                         statusEl.className = "text-rose-600 font-bold";
-                        statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Ditolak: Anda berada ${Math.round(distance)}m di luar area kantor Perumda.`;
-                        checkSubmitState();
+                        statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Ditolak: Anda berada ${Math.round(distance)}m di luar area kantor (maks ${MAX_RADIUS_METERS}m).`;
                     }
+                    checkSubmitState();
                 },
                 (error) => {
-                    isGPSValid = true;
-                    statusEl.className = "text-emerald-600 font-bold";
-                    statusEl.innerHTML = "<i class='fa-solid fa-circle-check'></i> GPS Presisi Terhubung: Perumda Jl. M. Boya No. 07 (-0.3255, 103.1568)";
+                    isGPSValid = false;
+                    statusEl.className = "text-rose-600 font-bold";
+                    statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Gagal membaca GPS (${error.message}). Aktifkan izin lokasi atau centang Mode Uji.`;
                     checkSubmitState();
-                }
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
             );
         }
 
@@ -1195,10 +1251,26 @@
         }
 
         // ================= SUBMIT ABSENSI & IZIN KE CLOUD =================
+        function upsertLocalAttendanceRecord(empId, isoDate, statusCode) {
+            const idx = yearlyAttendances.findIndex(
+                a => String(a.employee_id) === String(empId) && a.date === isoDate
+            );
+            if (idx >= 0) {
+                yearlyAttendances[idx].status = statusCode;
+            } else {
+                yearlyAttendances.push({ employee_id: empId, date: isoDate, status: statusCode });
+            }
+        }
+
         async function handleAbsenSubmit(e) {
             e.preventDefault();
-            const empId = document.getElementById('inputNama').value;
-            const emp = employeesData.find(e => e.id == empId);
+            const empIdRaw = document.getElementById('inputNama').value;
+            const emp = employeesData.find(e => String(e.id) === String(empIdRaw));
+            if (!emp) {
+                alert("Pilih pegawai terlebih dahulu.");
+                return;
+            }
+
             const now = new Date();
             const isLate = now.getHours() > 8 || (now.getHours() === 8 && now.getMinutes() > 0);
             const statusCode = isLate ? 'T' : 'H';
@@ -1210,10 +1282,9 @@
             const todayDate = now.getDate();
 
             if (isCloudConnected && sbClient) {
-                // Hapus entri tanggal yang sama jika ada, lalu insert baru
-                await sbClient.from('attendances').delete().match({ employee_id: String(empId), date: isoDate });
+                await sbClient.from('attendances').delete().match({ employee_id: emp.id, date: isoDate });
                 const { error } = await sbClient.from('attendances').insert([{
-                    employee_id: String(empId),
+                    employee_id: emp.id,
                     date: isoDate,
                     status: statusCode
                 }]);
@@ -1223,30 +1294,37 @@
                 }
             }
 
-            if (!monthlyMatrix[empId]) monthlyMatrix[empId] = {};
-            monthlyMatrix[empId][todayDate] = statusCode;
+            if (!monthlyMatrix[emp.id]) monthlyMatrix[emp.id] = {};
+            monthlyMatrix[emp.id][todayDate] = statusCode;
             localStorage.setItem('perumda_matrix', JSON.stringify(monthlyMatrix));
+            upsertLocalAttendanceRecord(emp.id, isoDate, statusCode);
 
-            alert(`Absensi Berhasil Disimpan${isCloudConnected ? ' ke Cloud Supabase' : ''}!
-Nama: ${emp ? emp.nama : '-'}
-Waktu: ${now.toLocaleTimeString()} WIB
-Status: ${isLate ? 'TERLAMBAT (Merah)' : 'HADIR TEPAT WAKTU (Hijau)'}`);
+            alert(`Absensi Berhasil Disimpan${isCloudConnected ? ' ke Cloud Supabase' : ''}!\nNama: ${emp.nama}\nWaktu: ${now.toLocaleTimeString()} WIB\nStatus: ${isLate ? 'TERLAMBAT (Merah)' : 'HADIR TEPAT WAKTU (Hijau)'}`);
             renderMonthlyRekapTable();
+            renderYearlyRekapTable();
             updateStatsDashboard();
         }
 
         async function handleLeaveSubmit(e) {
             e.preventDefault();
-            const empId = document.getElementById('leaveNama').value;
-            const emp = employeesData.find(e => e.id == empId);
+            const empIdRaw = document.getElementById('leaveNama').value;
+            const emp = employeesData.find(e => String(e.id) === String(empIdRaw));
+            if (!emp) {
+                alert("Pilih pegawai terlebih dahulu.");
+                return;
+            }
+
             const type = document.getElementById('leaveType').value;
             const dateVal = document.getElementById('leaveDate').value;
-            const dayNum = new Date(dateVal).getDate() || 1;
+            const dateParts = dateVal.split('-');
+            const selMonth = parseInt(dateParts[1], 10);
+            const dayNum = parseInt(dateParts[2], 10) || 1;
+            const currentMonth = new Date().getMonth() + 1;
 
             if (isCloudConnected && sbClient) {
-                await sbClient.from('attendances').delete().match({ employee_id: String(empId), date: dateVal });
+                await sbClient.from('attendances').delete().match({ employee_id: emp.id, date: dateVal });
                 const { error } = await sbClient.from('attendances').insert([{
-                    employee_id: String(empId),
+                    employee_id: emp.id,
                     date: dateVal,
                     status: 'I'
                 }]);
@@ -1256,12 +1334,16 @@ Status: ${isLate ? 'TERLAMBAT (Merah)' : 'HADIR TEPAT WAKTU (Hijau)'}`);
                 }
             }
 
-            if (!monthlyMatrix[empId]) monthlyMatrix[empId] = {};
-            monthlyMatrix[empId][dayNum] = 'I';
-            localStorage.setItem('perumda_matrix', JSON.stringify(monthlyMatrix));
+            if (selMonth === currentMonth) {
+                if (!monthlyMatrix[emp.id]) monthlyMatrix[emp.id] = {};
+                monthlyMatrix[emp.id][dayNum] = 'I';
+                localStorage.setItem('perumda_matrix', JSON.stringify(monthlyMatrix));
+            }
+            upsertLocalAttendanceRecord(emp.id, dateVal, 'I');
 
-            alert(`Permohonan ${type} untuk ${emp ? emp.nama : '-'} telah disetujui${isCloudConnected ? ' & tersimpan di Supabase' : ''}. Status absensi diubah menjadi KUNING.`);
+            alert(`Permohonan ${type} untuk ${emp.nama} telah disetujui${isCloudConnected ? ' & tersimpan di Supabase' : ''}. Status absensi diubah menjadi KUNING.`);
             renderMonthlyRekapTable();
+            renderYearlyRekapTable();
             updateStatsDashboard();
         }
 
@@ -1302,24 +1384,74 @@ Status: ${isLate ? 'TERLAMBAT (Merah)' : 'HADIR TEPAT WAKTU (Hijau)'}`);
         function renderYearlyRekapTable() {
             const tbody = document.getElementById('yearlyRekapBody');
             tbody.innerHTML = '';
+            const currentMonth = new Date().getMonth() + 1;
 
             employeesData.forEach((emp, index) => {
-                const yearData = yearlyMatrix[emp.id] || [100,100,100,100,100,100,100,100,100,100,100,100];
-                const avgPerf = Math.round(yearData.reduce((a,b) => a+b, 0) / 12);
+                let totalHadir = 0;
+                let totalIzin = 0;
+                let totalAlpaTerlambat = 0;
+                let monthlyPercentages = [];
+
+                for (let m = 1; m <= 12; m++) {
+                    const recordsInMonth = yearlyAttendances.filter(a => {
+                        if (String(a.employee_id) !== String(emp.id)) return false;
+                        const recMonth = parseInt(a.date.split('-')[1], 10);
+                        return recMonth === m;
+                    });
+
+                    if (recordsInMonth.length > 0) {
+                        let mH = 0, mI = 0, mT = 0;
+                        recordsInMonth.forEach(r => {
+                            if (r.status === 'I') mI++;
+                            else if (r.status === 'T' || r.status === 'A') mT++;
+                            else mH++;
+                        });
+                        totalHadir += mH;
+                        totalIzin += mI;
+                        totalAlpaTerlambat += mT;
+                        const pct = Math.round(((mH + mI) / recordsInMonth.length) * 100);
+                        monthlyPercentages.push(pct);
+                    } else if (m === currentMonth && monthlyMatrix[emp.id]) {
+                        // Fallback dari matrix bulan berjalan jika belum ada di yearlyAttendances
+                        let mH = 0, mI = 0, mT = 0;
+                        for (let d = 1; d <= 31; d++) {
+                            const st = monthlyMatrix[emp.id][d] || 'H';
+                            if (st === 'I') mI++;
+                            else if (st === 'T' || st === 'A') mT++;
+                            else mH++;
+                        }
+                        totalHadir += mH;
+                        totalIzin += mI;
+                        totalAlpaTerlambat += mT;
+                        const pct = Math.round(((mH + mI) / 31) * 100);
+                        monthlyPercentages.push(pct);
+                    } else {
+                        monthlyPercentages.push(null);
+                    }
+                }
+
+                const validMonths = monthlyPercentages.filter(v => v !== null);
+                const avgPerf = validMonths.length > 0
+                    ? Math.round(validMonths.reduce((a, b) => a + b, 0) / validMonths.length)
+                    : 100;
 
                 let row = `<tr class="border-b border-slate-200 hover:bg-slate-50">
                     <td class="border border-slate-300 text-center font-bold px-2 py-2">${index + 1}</td>
                     <td class="border border-slate-300 px-3 py-2 font-bold text-slate-900">${emp.nama}<br><span class="text-[9px] text-slate-500 font-mono">NIK: ${emp.nik}</span></td>
                     <td class="border border-slate-300 px-3 py-2 text-slate-600">${emp.jabatan}</td>`;
 
-                yearData.forEach(val => {
-                    let color = val >= 95 ? "text-emerald-600" : (val >= 90 ? "text-amber-600" : "text-rose-600");
-                    row += `<td class="border border-slate-300 text-center font-mono font-bold ${color}">${val}%</td>`;
+                monthlyPercentages.forEach(val => {
+                    if (val === null) {
+                        row += `<td class="border border-slate-300 text-center font-mono text-slate-400">-</td>`;
+                    } else {
+                        let color = val >= 95 ? "text-emerald-600" : (val >= 90 ? "text-amber-600" : "text-rose-600");
+                        row += `<td class="border border-slate-300 text-center font-mono font-bold ${color}">${val}%</td>`;
+                    }
                 });
 
-                row += `<td class="border border-slate-300 text-center font-bold bg-emerald-50 text-emerald-800">240 Hari</td>
-                        <td class="border border-slate-300 text-center font-bold bg-amber-50 text-amber-800">5 Hari</td>
-                        <td class="border border-slate-300 text-center font-bold bg-rose-50 text-rose-800">2 Hari</td>
+                row += `<td class="border border-slate-300 text-center font-bold bg-emerald-50 text-emerald-800">${totalHadir} Hari</td>
+                        <td class="border border-slate-300 text-center font-bold bg-amber-50 text-amber-800">${totalIzin} Hari</td>
+                        <td class="border border-slate-300 text-center font-bold bg-rose-50 text-rose-800">${totalAlpaTerlambat} Hari</td>
                         <td class="border border-slate-300 text-center font-extrabold bg-blue-100 text-blue-900">${avgPerf}%</td>
                     </tr>`;
                 tbody.innerHTML += row;
@@ -1327,25 +1459,24 @@ Status: ${isLate ? 'TERLAMBAT (Merah)' : 'HADIR TEPAT WAKTU (Hijau)'}`);
         }
 
         function switchRekapMode(mode) {
+            currentRekapMode = mode;
             const monthlyCont = document.getElementById('monthlyRekapContainer');
             const yearlyCont = document.getElementById('yearlyRekapContainer');
             const tabMonthly = document.getElementById('tabBtnMonthly');
             const tabYearly = document.getElementById('tabBtnYearly');
-            const printTitle = document.getElementById('printReportTitle');
 
             if (mode === 'monthly') {
                 monthlyCont.classList.remove('hidden');
                 yearlyCont.classList.add('hidden');
                 tabMonthly.className = "px-3.5 py-1.5 rounded-lg bg-white text-blue-600 shadow-sm";
                 tabYearly.className = "px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900";
-                printTitle.textContent = "REKAPITULASI ABSENSI PEGAWAI PERIODE BULAN NOVEMBER 2026";
             } else {
                 monthlyCont.classList.add('hidden');
                 yearlyCont.classList.remove('hidden');
                 tabYearly.className = "px-3.5 py-1.5 rounded-lg bg-white text-blue-600 shadow-sm";
                 tabMonthly.className = "px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900";
-                printTitle.textContent = "REKAPITULASI ABSENSI PEGAWAI TAHUNAN PERIODE JANUARI - DESEMBER 2026";
             }
+            updateDynamicPeriodLabels();
         }
 
         function initChart() {
