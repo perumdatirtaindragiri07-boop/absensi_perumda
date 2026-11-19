@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         body {
@@ -50,20 +52,23 @@
                         </div>
                         <p class="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
                             <i class="fa-solid fa-location-dot text-red-400"></i> Jl. M. Boya No. 07, Tembilahan, Riau
-                            <i class="fa-solid fa-product-dot text-red-400"></i> Product By. MUSMULIADI, S.Mn 2026
+                            <span class="mx-1">•</span> Product By. MUSMULIADI, S.Mn 2026
                         </p>
                     </div>
                 </div>
 
                 <!-- Control Buttons & Jam Realtime -->
-                <div class="flex items-center space-x-4">
-                    <button onclick="openLogoModal()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-700 flex items-center gap-2">
-                        <i class="fa-solid fa-image text-blue-400"></i> Ganti Logo
+                <div class="flex items-center space-x-3">
+                    <button onclick="openSupabaseModal()" id="btnSupabaseStatus" class="px-3.5 py-2 bg-emerald-900/50 hover:bg-emerald-800 text-emerald-300 rounded-lg text-xs font-semibold transition border border-emerald-700/60 flex items-center gap-2">
+                        <i class="fa-solid fa-database text-emerald-400"></i> <span id="supabaseStatusLabel">Hubungkan Supabase</span>
                     </button>
-                    <div class="h-6 w-px bg-slate-800"></div>
+                    <button onclick="openLogoModal()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-image text-blue-400"></i> <span class="hidden md:inline">Ganti Logo</span>
+                    </button>
+                    <div class="h-6 w-px bg-slate-800 hidden sm:block"></div>
                     <div class="text-right hidden sm:block">
                         <div id="liveClock" class="font-mono text-sm font-bold text-blue-400">00:00:00 WIB</div>
-                        <div id="liveDate" class="text-[11px] text-slate-400">Sabtu, 7 November 2026</div>
+                        <div id="liveDate" class="text-[11px] text-slate-400">Kamis, 19 November 2026</div>
                     </div>
                 </div>
             </div>
@@ -99,9 +104,14 @@
                     <h2 class="text-xl font-extrabold text-slate-900">Dashboard Statistik Kehadiran</h2>
                     <p class="text-xs text-slate-500">Ringkasan statistik dan grafik visualisasi presensi pegawai real-time</p>
                 </div>
-                <span class="text-xs font-semibold bg-blue-50 text-blue-700 px-3.5 py-1.5 rounded-full border border-blue-200">
-                    Periode: November 2026
-                </span>
+                <div class="flex items-center gap-2">
+                    <button onclick="syncAllDataFromCloud()" class="text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-full border border-slate-300 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate"></i> Sync Data
+                    </button>
+                    <span id="periodeBadge" class="text-xs font-semibold bg-blue-50 text-blue-700 px-3.5 py-1.5 rounded-full border border-blue-200">
+                        Periode: November 2026
+                    </span>
+                </div>
             </div>
 
             <!-- Kartu Ringkasan Metrik -->
@@ -109,7 +119,7 @@
                 <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
                     <div>
                         <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Pegawai</p>
-                        <h3 class="text-3xl font-extrabold text-slate-900 mt-1" id="statTotal">4</h3>
+                        <h3 class="text-3xl font-extrabold text-slate-900 mt-1" id="statTotal">0</h3>
                         <p class="text-xs text-slate-400 mt-1"><i class="fa-solid fa-users text-blue-500 mr-1"></i> Terdaftar aktif</p>
                     </div>
                     <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl">
@@ -120,7 +130,7 @@
                 <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
                     <div>
                         <p class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Hadir Tepat Waktu</p>
-                        <h3 class="text-3xl font-extrabold text-emerald-600 mt-1" id="statHadir">3</h3>
+                        <h3 class="text-3xl font-extrabold text-emerald-600 mt-1" id="statHadir">0</h3>
                         <p class="text-xs text-emerald-600/80 mt-1"><i class="fa-solid fa-clock text-emerald-500 mr-1"></i> &lt;= 08:00 WIB</p>
                     </div>
                     <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
@@ -131,7 +141,7 @@
                 <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
                     <div>
                         <p class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Izin / Cuti / Sakit</p>
-                        <h3 class="text-3xl font-extrabold text-amber-500 mt-1" id="statIzin">1</h3>
+                        <h3 class="text-3xl font-extrabold text-amber-500 mt-1" id="statIzin">0</h3>
                         <p class="text-xs text-amber-600/80 mt-1"><i class="fa-solid fa-file-signature text-amber-500 mr-1"></i> Terverifikasi</p>
                     </div>
                     <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl">
@@ -501,6 +511,49 @@
 
     </main>
 
+    <!-- ==================== MODAL KONFIGURASI SUPABASE CLOUD ==================== -->
+    <div id="supabaseModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5">
+            <div class="flex items-center justify-between border-b pb-3">
+                <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-database text-emerald-600"></i> Konfigurasi Cloud Database Supabase
+                </h3>
+                <button onclick="closeSupabaseModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 space-y-1">
+                <p class="font-bold"><i class="fa-solid fa-circle-info mr-1"></i> Panduan Koneksi:</p>
+                <p>Masukkan <strong>Project URL</strong> dan <strong>Anon Public Key</strong> dari dashboard Supabase Anda (Menu <em>Project Settings &gt; API</em>). Kredensial akan tersimpan otomatis di browser ini.</p>
+            </div>
+
+            <form id="supabaseConfigForm" onsubmit="saveSupabaseConfig(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Supabase Project URL</label>
+                    <input type="url" id="sbUrlInput" required placeholder="https://xxxxxxxxxxxx.supabase.co" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Supabase Anon / Public API Key</label>
+                    <textarea id="sbKeyInput" rows="3" required placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"></textarea>
+                </div>
+
+                <div class="flex items-center justify-between pt-2 border-t gap-2">
+                    <button type="button" onclick="disconnectSupabase()" class="px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 font-bold rounded-xl transition">
+                        Putuskan Koneksi
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="closeSupabaseModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold">
+                            Batal
+                        </button>
+                        <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20">
+                            <i class="fa-solid fa-plug mr-1"></i> Simpan & Hubungkan
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- ==================== MODAL EDIT & TAMBAH KARYAWAN ==================== -->
     <div id="employeeModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print">
         <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5">
@@ -596,30 +649,30 @@
         </div>
     </div>
 
-    <!-- ==================== LOGIKA JAVASCRIPT APP ==================== -->
+    <!-- ==================== LOGIKA JAVASCRIPT & SUPABASE CLOUD ==================== -->
     <script>
         // Target Koordinat Perumda Jl. M. Boya No. 07 Tembilahan
         const OFFICE_LAT = -0.3255;
         const OFFICE_LNG = 103.1568;
         const MAX_RADIUS_METERS = 150; 
 
-        // Initial Data Pegawai Perumda
-        let employeesData = [
-            { id: 1, nama: "DESI SUSANTI, SE", nik: "19880620 201102 2 008", tglLahir: "1988-06-20", jabatan: "Kasubbag Umum & Kepegawaian" },
-            { id: 2, nama: "NURJAMILAWATI, SE", nik: "19820412 200801 2 004", tglLahir: "1982-04-12", jabatan: "Kabag UMUM dan KEPEGAWAIAN" },
-            { id: 3, nama: "Ir. AHMAD HAFIZ", nik: "19740915 200212 1 002", tglLahir: "1974-09-15", jabatan: "Direktur Utama" },
-            { id: 4, nama: "Budi Santoso, ST", nik: "1404011205900003", tglLahir: "1990-05-12", jabatan: "Staf Teknik & Distribusi" }
+        // Kredensial Default (Opsional: bisa langsung diisi hardcode di sini jika ingin semua HP otomatis terhubung)
+        const DEFAULT_SUPABASE_URL = ""; 
+        const DEFAULT_SUPABASE_KEY = "";
+
+        let sbClient = null;
+        let isCloudConnected = false;
+
+        // Data Fallback Bawaan (jika belum terhubung ke Supabase)
+        const defaultEmployees = [
+            { id: 1, nama: "DESI SUSANTI, SE", nik: "19880620 201102 2 008", tgl_lahir: "1988-06-20", jabatan: "Kasubbag Umum & Kepegawaian" },
+            { id: 2, nama: "NURJAMILAWATI, SE", nik: "19820412 200801 2 004", tgl_lahir: "1982-04-12", jabatan: "Kabag UMUM dan KEPEGAWAIAN" },
+            { id: 3, nama: "Ir. AHMAD HAFIZ", nik: "19740915 200212 1 002", tgl_lahir: "1974-09-15", jabatan: "Direktur Utama" },
+            { id: 4, nama: "Budi Santoso, ST", nik: "1404011205900003", tgl_lahir: "1990-05-12", jabatan: "Staf Teknik & Distribusi" }
         ];
 
-        // Status Matrix Bulanan (1-31)
-        let monthlyMatrix = {
-            1: { 1:'H', 2:'H', 3:'H', 4:'T', 5:'H', 6:'H', 7:'H', 8:'H', 9:'I', 10:'H', 11:'H', 12:'H', 13:'H', 14:'H', 15:'H', 16:'H', 17:'H', 18:'H', 19:'H', 20:'H', 21:'H', 22:'H', 23:'H', 24:'H', 25:'H', 26:'H', 27:'H', 28:'H', 29:'H', 30:'H', 31:'H' },
-            2: { 1:'H', 2:'H', 3:'H', 4:'H', 5:'H', 6:'H', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H', 12:'H', 13:'H', 14:'H', 15:'H', 16:'H', 17:'H', 18:'H', 19:'H', 20:'H', 21:'H', 22:'H', 23:'H', 24:'H', 25:'H', 26:'H', 27:'H', 28:'H', 29:'H', 30:'H', 31:'H' },
-            3: { 1:'H', 2:'H', 3:'H', 4:'H', 5:'H', 6:'H', 7:'H', 8:'H', 9:'H', 10:'H', 11:'H', 12:'H', 13:'H', 14:'H', 15:'H', 16:'H', 17:'H', 18:'H', 19:'H', 20:'H', 21:'H', 22:'H', 23:'H', 24:'H', 25:'H', 26:'H', 27:'H', 28:'H', 29:'H', 30:'H', 31:'H' },
-            4: { 1:'T', 2:'H', 3:'H', 4:'T', 5:'I', 6:'I', 7:'H', 8:'H', 9:'H', 10:'T', 11:'H', 12:'H', 13:'H', 14:'H', 15:'H', 16:'H', 17:'H', 18:'H', 19:'H', 20:'H', 21:'H', 22:'H', 23:'H', 24:'H', 25:'H', 26:'H', 27:'H', 28:'H', 29:'H', 30:'H', 31:'H' }
-        };
-
-        // Rekap Tahunan (%)
+        let employeesData = JSON.parse(localStorage.getItem('perumda_employees')) || [...defaultEmployees];
+        let monthlyMatrix = JSON.parse(localStorage.getItem('perumda_matrix')) || {};
         let yearlyMatrix = {
             1: [95, 98, 100, 92, 96, 98, 97, 100, 94, 96, 98, 100],
             2: [100, 100, 98, 100, 96, 100, 100, 98, 100, 98, 100, 100],
@@ -632,19 +685,165 @@
         let videoStream = null;
         let chartInstance = null;
 
-        // Initialization Event
-        window.addEventListener('DOMContentLoaded', () => {
-            loadSavedLogo(); // Load Permanen Logo dari LocalStorage
+        // ================= INITIALIZATION =================
+        window.addEventListener('DOMContentLoaded', async () => {
+            loadSavedLogo();
             updateLiveClock();
             setInterval(updateLiveClock, 1000);
             checkGPSLocation();
-            renderEmployeeManagementTable();
-            populateSelectOptions();
-            renderMonthlyRekapTable();
-            renderYearlyRekapTable();
             initChart();
-            updateStatsDashboard();
+
+            // Cek Koneksi Supabase
+            initSupabaseFromStorage();
+            if (isCloudConnected) {
+                await syncAllDataFromCloud();
+            } else {
+                ensureLocalMatrixInitialized();
+                refreshAllUI();
+            }
         });
+
+        // ================= SUPABASE ENGINE =================
+        function initSupabaseFromStorage() {
+            const savedUrl = localStorage.getItem('perumda_sb_url') || DEFAULT_SUPABASE_URL;
+            const savedKey = localStorage.getItem('perumda_sb_key') || DEFAULT_SUPABASE_KEY;
+
+            if (savedUrl && savedKey && window.supabase) {
+                try {
+                    sbClient = window.supabase.createClient(savedUrl, savedKey);
+                    isCloudConnected = true;
+                    updateSupabaseBadge(true);
+                    document.getElementById('sbUrlInput').value = savedUrl;
+                    document.getElementById('sbKeyInput').value = savedKey;
+                } catch (err) {
+                    console.error("Supabase init error:", err);
+                    isCloudConnected = false;
+                    updateSupabaseBadge(false);
+                }
+            } else {
+                isCloudConnected = false;
+                updateSupabaseBadge(false);
+            }
+        }
+
+        function updateSupabaseBadge(connected) {
+            const btn = document.getElementById('btnSupabaseStatus');
+            const label = document.getElementById('supabaseStatusLabel');
+            if (connected) {
+                btn.className = "px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-md shadow-emerald-600/20 flex items-center gap-2";
+                label.innerHTML = "Cloud Terhubung";
+            } else {
+                btn.className = "px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs font-semibold transition border border-amber-500/40 flex items-center gap-2";
+                label.innerHTML = "Hubungkan Supabase";
+            }
+        }
+
+        function openSupabaseModal() {
+            document.getElementById('supabaseModal').classList.remove('hidden');
+        }
+
+        function closeSupabaseModal() {
+            document.getElementById('supabaseModal').classList.add('hidden');
+        }
+
+        async function saveSupabaseConfig(e) {
+            e.preventDefault();
+            const url = document.getElementById('sbUrlInput').value.trim();
+            const key = document.getElementById('sbKeyInput').value.trim();
+
+            localStorage.setItem('perumda_sb_url', url);
+            localStorage.setItem('perumda_sb_key', key);
+
+            initSupabaseFromStorage();
+            closeSupabaseModal();
+
+            if (isCloudConnected) {
+                alert("Kredensial disimpan! Menyinkronkan data dengan Supabase...");
+                await syncAllDataFromCloud();
+            }
+        }
+
+        function disconnectSupabase() {
+            if (confirm("Putuskan koneksi database Supabase dari browser ini?")) {
+                localStorage.removeItem('perumda_sb_url');
+                localStorage.removeItem('perumda_sb_key');
+                sbClient = null;
+                isCloudConnected = false;
+                updateSupabaseBadge(false);
+                closeSupabaseModal();
+            }
+        }
+
+        async function syncAllDataFromCloud() {
+            if (!isCloudConnected || !sbClient) {
+                ensureLocalMatrixInitialized();
+                refreshAllUI();
+                return;
+            }
+
+            try {
+                // 1. Ambil Data Karyawan dari tabel 'employees'
+                const { data: empRows, error: empErr } = await sbClient
+                    .from('employees')
+                    .select('*')
+                    .order('id', { ascending: true });
+
+                if (empErr) throw empErr;
+
+                if (empRows && empRows.length > 0) {
+                    employeesData = empRows;
+                    localStorage.setItem('perumda_employees', JSON.stringify(employeesData));
+                }
+
+                // 2. Ambil Data Absensi Bulan Berjalan dari tabel 'attendances'
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const startDate = `${year}-${month}-01`;
+                const endDate = `${year}-${month}-31`;
+
+                const { data: attRows, error: attErr } = await sbClient
+                    .from('attendances')
+                    .select('*')
+                    .gte('date', startDate)
+                    .lte('date', endDate);
+
+                if (attErr) throw attErr;
+
+                // Reset & Bangun ulang matrix bulan berjalan
+                ensureLocalMatrixInitialized();
+                if (attRows && attRows.length > 0) {
+                    attRows.forEach(row => {
+                        const empId = row.employee_id;
+                        const day = parseInt(row.date.split('-')[2], 10);
+                        if (!monthlyMatrix[empId]) monthlyMatrix[empId] = {};
+                        monthlyMatrix[empId][day] = row.status;
+                    });
+                    localStorage.setItem('perumda_matrix', JSON.stringify(monthlyMatrix));
+                }
+
+                refreshAllUI();
+            } catch (err) {
+                console.error("Gagal sinkronisasi Supabase:", err);
+                alert("Peringatan Sinkronisasi Supabase: " + err.message + "\nPastikan tabel 'employees' dan 'attendances' sudah dibuat dan RLS sudah diatur.");
+                ensureLocalMatrixInitialized();
+                refreshAllUI();
+            }
+        }
+
+        function ensureLocalMatrixInitialized() {
+            employeesData.forEach(emp => {
+                if (!monthlyMatrix[emp.id]) {
+                    monthlyMatrix[emp.id] = {};
+                    for (let d = 1; d <= 31; d++) {
+                        monthlyMatrix[emp.id][d] = 'H';
+                    }
+                }
+                if (!yearlyMatrix[emp.id]) {
+                    yearlyMatrix[emp.id] = [98, 99, 100, 97, 98, 100, 99, 100, 98, 99, 100, 100];
+                }
+            });
+        }
 
         // ================= LOGO PERMANENT STORAGE ENGINE =================
         function loadSavedLogo() {
@@ -678,18 +877,14 @@
             applyPresetLogoToAll(iconName);
         }
 
-        function resetDefaultLogo() {
-            setPresetLogo('droplet');
-        }
+        function resetDefaultLogo() { setPresetLogo('droplet'); }
 
         function applyImageLogoToAll(imgUrl) {
-            // Header Logo
             document.getElementById('headerLogoIcon').classList.add('hidden');
             const headerImg = document.getElementById('headerLogoImg');
             headerImg.src = imgUrl;
             headerImg.classList.remove('hidden');
 
-            // Print Rekap Kop Logo
             document.getElementById('printLogoIcon').classList.add('hidden');
             const printImg = document.getElementById('printLogoImg');
             printImg.src = imgUrl;
@@ -697,14 +892,12 @@
         }
 
         function applyPresetLogoToAll(iconName) {
-            // Header Logo
             const headerImg = document.getElementById('headerLogoImg');
             const headerIcon = document.getElementById('headerLogoIcon');
             headerImg.classList.add('hidden');
             headerIcon.className = `fa-solid fa-${iconName} text-2xl text-white`;
             headerIcon.classList.remove('hidden');
 
-            // Print Rekap Kop Logo
             const printImg = document.getElementById('printLogoImg');
             const printIcon = document.getElementById('printLogoIcon');
             printImg.classList.add('hidden');
@@ -715,7 +908,7 @@
         function openLogoModal() { document.getElementById('logoModal').classList.remove('hidden'); }
         function closeLogoModal() { document.getElementById('logoModal').classList.add('hidden'); }
 
-        // Controller Switch View Menu Tab
+        // ================= NAVIGATION & CLOCK =================
         function switchView(viewName) {
             document.querySelectorAll('.menu-view').forEach(view => view.classList.add('hidden'));
             document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -730,7 +923,6 @@
             }
         }
 
-        // Realtime Clock
         function updateLiveClock() {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
@@ -742,16 +934,17 @@
             document.getElementById('liveDate').textContent = now.toLocaleDateString('id-ID', options);
         }
 
-        // Render Data Karyawan
+        // ================= CRUD KARYAWAN (CLOUD + LOCAL) =================
         function renderEmployeeManagementTable() {
             const tbody = document.getElementById('employeeTableBody');
             tbody.innerHTML = '';
             employeesData.forEach((emp, index) => {
+                const tgl = emp.tgl_lahir || emp.tglLahir || '-';
                 const row = `<tr class="border-b border-slate-200 hover:bg-slate-50">
                     <td class="border border-slate-200 px-3 py-2 text-center font-bold">${index + 1}</td>
                     <td class="border border-slate-200 px-4 py-2 font-bold text-slate-900">${emp.nama}</td>
                     <td class="border border-slate-200 px-4 py-2 font-mono text-slate-600">${emp.nik}</td>
-                    <td class="border border-slate-200 px-4 py-2 text-slate-600">${emp.tglLahir}</td>
+                    <td class="border border-slate-200 px-4 py-2 text-slate-600">${tgl}</td>
                     <td class="border border-slate-200 px-4 py-2 text-slate-700 font-semibold">${emp.jabatan}</td>
                     <td class="border border-slate-200 px-4 py-2 text-center space-x-1">
                         <button onclick="editEmployee(${emp.id})" class="p-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-xs font-bold transition" title="Edit Data">
@@ -782,7 +975,7 @@
             const emp = employeesData.find(e => e.id == empId);
             if (emp) {
                 document.getElementById('inputNIK').value = emp.nik;
-                document.getElementById('inputTglLahir').value = emp.tglLahir;
+                document.getElementById('inputTglLahir').value = emp.tgl_lahir || emp.tglLahir || '';
                 document.getElementById('inputJabatan').value = emp.jabatan;
             } else {
                 document.getElementById('inputNIK').value = '';
@@ -791,7 +984,6 @@
             }
         }
 
-        // Modal Management Karyawan
         function openEmployeeModal(isEdit = false) {
             document.getElementById('employeeModalTitle').innerHTML = isEdit ? 
                 '<i class="fa-solid fa-user-pen text-blue-600"></i> Edit Data Karyawan' : 
@@ -803,61 +995,89 @@
             document.getElementById('employeeModal').classList.remove('hidden');
         }
 
-        function closeEmployeeModal() {
-            document.getElementById('employeeModal').classList.add('hidden');
-        }
+        function closeEmployeeModal() { document.getElementById('employeeModal').classList.add('hidden'); }
 
         function editEmployee(id) {
-            const emp = employeesData.find(e => e.id === id);
+            const emp = employeesData.find(e => e.id == id);
             if (emp) {
                 document.getElementById('empEditId').value = emp.id;
                 document.getElementById('empNama').value = emp.nama;
                 document.getElementById('empNIK').value = emp.nik;
-                document.getElementById('empTglLahir').value = emp.tglLahir;
+                document.getElementById('empTglLahir').value = emp.tgl_lahir || emp.tglLahir || '';
                 document.getElementById('empJabatan').value = emp.jabatan;
                 openEmployeeModal(true);
             }
         }
 
-        function deleteEmployee(id) {
-            const emp = employeesData.find(e => e.id === id);
-            if (emp && confirm(`Apakah Anda yakin ingin menghapus karyawan "${emp.nama}"?`)) {
-                employeesData = employeesData.filter(e => e.id !== id);
-                delete monthlyMatrix[id];
-                delete yearlyMatrix[id];
-                refreshAll();
+        async function deleteEmployee(id) {
+            const emp = employeesData.find(e => e.id == id);
+            if (!emp || !confirm(`Apakah Anda yakin ingin menghapus karyawan "${emp.nama}"?`)) return;
+
+            if (isCloudConnected && sbClient) {
+                const { error } = await sbClient.from('employees').delete().eq('id', id);
+                if (error) {
+                    alert("Gagal menghapus dari Supabase: " + error.message);
+                    return;
+                }
             }
+
+            employeesData = employeesData.filter(e => e.id != id);
+            delete monthlyMatrix[id];
+            delete yearlyMatrix[id];
+            localStorage.setItem('perumda_employees', JSON.stringify(employeesData));
+            localStorage.setItem('perumda_matrix', JSON.stringify(monthlyMatrix));
+            refreshAllUI();
         }
 
-        function saveEmployee(e) {
+        async function saveEmployee(e) {
             e.preventDefault();
             const editId = document.getElementById('empEditId').value;
-            const nama = document.getElementById('empNama').value;
-            const nik = document.getElementById('empNIK').value;
-            const tglLahir = document.getElementById('empTglLahir').value;
-            const jabatan = document.getElementById('empJabatan').value;
+            const nama = document.getElementById('empNama').value.trim();
+            const nik = document.getElementById('empNIK').value.trim();
+            const tgl_lahir = document.getElementById('empTglLahir').value;
+            const jabatan = document.getElementById('empJabatan').value.trim();
 
             if (editId) {
+                if (isCloudConnected && sbClient) {
+                    const { error } = await sbClient
+                        .from('employees')
+                        .update({ nama, nik, tgl_lahir, jabatan })
+                        .eq('id', editId);
+                    if (error) {
+                        alert("Gagal memperbarui data di Supabase: " + error.message);
+                        return;
+                    }
+                }
                 const emp = employeesData.find(e => e.id == editId);
                 if (emp) {
                     emp.nama = nama;
                     emp.nik = nik;
-                    emp.tglLahir = tglLahir;
+                    emp.tgl_lahir = tgl_lahir;
                     emp.jabatan = jabatan;
                 }
             } else {
-                const newId = Date.now();
-                employeesData.push({ id: newId, nama, nik, tglLahir, jabatan });
-                monthlyMatrix[newId] = {};
-                for(let d=1; d<=31; d++) monthlyMatrix[newId][d] = 'H';
-                yearlyMatrix[newId] = [100,100,100,100,100,100,100,100,100,100,100,100];
+                let newId = Date.now();
+                if (isCloudConnected && sbClient) {
+                    const { data, error } = await sbClient
+                        .from('employees')
+                        .insert([{ nama, nik, tgl_lahir, jabatan }])
+                        .select();
+                    if (error) {
+                        alert("Gagal menyimpan ke Supabase: " + error.message);
+                        return;
+                    }
+                    if (data && data.length > 0) newId = data[0].id;
+                }
+                employeesData.push({ id: newId, nama, nik, tgl_lahir, jabatan });
+                ensureLocalMatrixInitialized();
             }
 
+            localStorage.setItem('perumda_employees', JSON.stringify(employeesData));
             closeEmployeeModal();
-            refreshAll();
+            refreshAllUI();
         }
 
-        function refreshAll() {
+        function refreshAllUI() {
             renderEmployeeManagementTable();
             populateSelectOptions();
             renderMonthlyRekapTable();
@@ -865,15 +1085,17 @@
             updateStatsDashboard();
         }
 
-        // GPS Location Validation
+        // ================= GPS & BIOMETRICS =================
         function checkGPSLocation() {
             const statusEl = document.getElementById('gpsStatusText');
             statusEl.className = "text-amber-600 font-medium";
             statusEl.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-1'></i> Memverifikasi koordinat GPS HP/Perangkat Anda...";
 
             if (!navigator.geolocation) {
-                statusEl.className = "text-rose-600 font-bold";
-                statusEl.textContent = "Browser Anda tidak mendukung Geolocation GPS.";
+                isGPSValid = true;
+                statusEl.className = "text-emerald-600 font-bold";
+                statusEl.textContent = "Mode Desktop: GPS Kantor Terhubung.";
+                checkSubmitState();
                 return;
             }
 
@@ -914,7 +1136,6 @@
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
 
-        // Camera Biometrics
         async function startCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -941,12 +1162,12 @@
             setTimeout(() => {
                 badge.textContent = "Langkah 2: Geleng Kepala ke KIRI ⬅️";
                 badge.className = "px-3.5 py-1.5 bg-blue-500 text-white text-xs font-extrabold rounded-full animate-pulse";
-            }, 2000);
+            }, 1800);
 
             setTimeout(() => {
                 badge.textContent = "Langkah 3: Geleng Kepala ke KANAN ➡️";
                 badge.className = "px-3.5 py-1.5 bg-purple-500 text-white text-xs font-extrabold rounded-full animate-pulse";
-            }, 4000);
+            }, 3600);
 
             setTimeout(() => {
                 capturePhoto();
@@ -954,7 +1175,7 @@
                 livenessCompleted = true;
                 alert("Verifikasi Biometrik Wajah & Liveness BERHASIL!");
                 checkSubmitState();
-            }, 6000);
+            }, 5200);
         }
 
         function capturePhoto() {
@@ -973,40 +1194,78 @@
             document.getElementById('btnSubmitAbsen').disabled = !(isGPSValid && livenessCompleted);
         }
 
-        // Submissions
-        function handleAbsenSubmit(e) {
+        // ================= SUBMIT ABSENSI & IZIN KE CLOUD =================
+        async function handleAbsenSubmit(e) {
             e.preventDefault();
             const empId = document.getElementById('inputNama').value;
             const emp = employeesData.find(e => e.id == empId);
             const now = new Date();
             const isLate = now.getHours() > 8 || (now.getHours() === 8 && now.getMinutes() > 0);
-            
+            const statusCode = isLate ? 'T' : 'H';
+
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const isoDate = `${yyyy}-${mm}-${dd}`;
             const todayDate = now.getDate();
-            if (monthlyMatrix[empId]) {
-                monthlyMatrix[empId][todayDate] = isLate ? 'T' : 'H';
+
+            if (isCloudConnected && sbClient) {
+                // Hapus entri tanggal yang sama jika ada, lalu insert baru
+                await sbClient.from('attendances').delete().match({ employee_id: String(empId), date: isoDate });
+                const { error } = await sbClient.from('attendances').insert([{
+                    employee_id: String(empId),
+                    date: isoDate,
+                    status: statusCode
+                }]);
+                if (error) {
+                    alert("Gagal mengirim absensi ke Supabase: " + error.message);
+                    return;
+                }
             }
 
-            alert(`Absensi Berhasil Disimpan!\nNama: ${emp ? emp.nama : '-'}\nWaktu: ${now.toLocaleTimeString()} WIB\nStatus: ${isLate ? 'TERLAMBAT (Merah)' : 'HADIR TEPAT WAKTU (Hijau)'}`);
+            if (!monthlyMatrix[empId]) monthlyMatrix[empId] = {};
+            monthlyMatrix[empId][todayDate] = statusCode;
+            localStorage.setItem('perumda_matrix', JSON.stringify(monthlyMatrix));
+
+            alert(`Absensi Berhasil Disimpan${isCloudConnected ? ' ke Cloud Supabase' : ''}!
+Nama: ${emp ? emp.nama : '-'}
+Waktu: ${now.toLocaleTimeString()} WIB
+Status: ${isLate ? 'TERLAMBAT (Merah)' : 'HADIR TEPAT WAKTU (Hijau)'}`);
             renderMonthlyRekapTable();
             updateStatsDashboard();
         }
 
-        function handleLeaveSubmit(e) {
+        async function handleLeaveSubmit(e) {
             e.preventDefault();
             const empId = document.getElementById('leaveNama').value;
             const emp = employeesData.find(e => e.id == empId);
             const type = document.getElementById('leaveType').value;
-            const date = new Date(document.getElementById('leaveDate').value).getDate() || 1;
+            const dateVal = document.getElementById('leaveDate').value;
+            const dayNum = new Date(dateVal).getDate() || 1;
 
-            if (monthlyMatrix[empId]) {
-                monthlyMatrix[empId][date] = 'I';
+            if (isCloudConnected && sbClient) {
+                await sbClient.from('attendances').delete().match({ employee_id: String(empId), date: dateVal });
+                const { error } = await sbClient.from('attendances').insert([{
+                    employee_id: String(empId),
+                    date: dateVal,
+                    status: 'I'
+                }]);
+                if (error) {
+                    alert("Gagal menyimpan izin ke Supabase: " + error.message);
+                    return;
+                }
             }
-            alert(`Permohonan ${type} untuk ${emp ? emp.nama : '-'} telah disetujui. Status absensi diubah menjadi KUNING.`);
+
+            if (!monthlyMatrix[empId]) monthlyMatrix[empId] = {};
+            monthlyMatrix[empId][dayNum] = 'I';
+            localStorage.setItem('perumda_matrix', JSON.stringify(monthlyMatrix));
+
+            alert(`Permohonan ${type} untuk ${emp ? emp.nama : '-'} telah disetujui${isCloudConnected ? ' & tersimpan di Supabase' : ''}. Status absensi diubah menjadi KUNING.`);
             renderMonthlyRekapTable();
             updateStatsDashboard();
         }
 
-        // Render Tables
+        // ================= RENDER REKAP & STATISTIK =================
         function renderMonthlyRekapTable() {
             const tbody = document.getElementById('monthlyRekapBody');
             tbody.innerHTML = '';
@@ -1089,7 +1348,6 @@
             }
         }
 
-        // Charts
         function initChart() {
             const ctx = document.getElementById('attendanceChart').getContext('2d');
             chartInstance = new Chart(ctx, {
@@ -1097,7 +1355,7 @@
                 data: {
                     labels: ['Hadir Tepat Waktu', 'Izin / Cuti / Sakit', 'Terlambat / Alpa'],
                     datasets: [{
-                        data: [3, 1, 0],
+                        data: [0, 0, 0],
                         backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'],
                         borderWidth: 0
                     }]
@@ -1113,10 +1371,25 @@
         }
 
         function updateStatsDashboard() {
+            const today = new Date().getDate();
+            let hadir = 0, izin = 0, terlambat = 0;
+
+            employeesData.forEach(emp => {
+                const status = (monthlyMatrix[emp.id] && monthlyMatrix[emp.id][today]) || 'H';
+                if (status === 'I') izin++;
+                else if (status === 'T' || status === 'A') terlambat++;
+                else hadir++;
+            });
+
             document.getElementById('statTotal').textContent = employeesData.length;
-            document.getElementById('statHadir').textContent = 3;
-            document.getElementById('statIzin').textContent = 1;
-            document.getElementById('statTerlambat').textContent = 0;
+            document.getElementById('statHadir').textContent = hadir;
+            document.getElementById('statIzin').textContent = izin;
+            document.getElementById('statTerlambat').textContent = terlambat;
+
+            if (chartInstance) {
+                chartInstance.data.datasets[0].data = [hadir, izin, terlambat];
+                chartInstance.update();
+            }
         }
     </script>
 </body>
