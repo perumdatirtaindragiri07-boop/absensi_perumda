@@ -187,17 +187,17 @@
             </div>
         </section>
 
-        <!-- 2. FORM PRESENSI WAJAH & GEOLOCATION GPS (WAJIB DI KANTOR JL. M. BOYA NO. 07) -->
+        <!-- 2. FORM PRESENSI WAJAH & GEOLOCATION GPS (WAJIB DI KANTOR JL. M. BOYA NO. 07, MAKS 250M) -->
         <section id="view-presensi" class="menu-view hidden max-w-3xl mx-auto bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
             <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
                     <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
                         <i class="fa-solid fa-camera text-blue-600"></i> Form Presensi Biometrik Wajah
                     </h3>
-                    <p class="text-xs text-slate-500">Wajib dilakukan di lokasi Kantor PDAM Jl. M. Boya No. 07 Tembilahan &amp; verifikasi liveness wajah</p>
+                    <p class="text-xs text-slate-500">Foto wajah hanya bisa dilakukan dalam radius maks. 250 m dari Kantor PDAM Jl. M. Boya No. 07 Tembilahan</p>
                 </div>
                 <span id="gpsHeaderBadge" class="px-3 py-1 bg-rose-50 text-rose-700 text-xs font-semibold rounded-full border border-rose-200">
-                    <i class="fa-solid fa-location-crosshairs mr-1"></i> Wajib di Kantor
+                    <i class="fa-solid fa-location-crosshairs mr-1"></i> Wajib &lt;= 250m Kantor
                 </span>
             </div>
 
@@ -226,11 +226,11 @@
                     </div>
                 </div>
 
-                <!-- GPS Geofencing Ketat Kantor -->
+                <!-- GPS Geofencing Ketat Kantor (Maksimal 250 Meter) -->
                 <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-map-pin text-red-500"></i> Validasi Geolocation GPS Kantor (Wajib)
+                            <i class="fa-solid fa-map-pin text-red-500"></i> Validasi Geolocation GPS Kantor (Maks. 250 m)
                         </span>
                         <div class="flex items-center gap-3">
                             <button type="button" onclick="calibrateOfficeFromCurrentGPS()" class="text-xs text-emerald-700 font-semibold hover:underline">
@@ -242,7 +242,7 @@
                         </div>
                     </div>
                     <div class="text-xs text-slate-600 space-y-1">
-                        <p id="officeCoordInfo"><strong>Lokasi Wajib:</strong> Kantor PDAM Perumda Tirta Indragiri, Jl. M. Boya No. 07 Tembilahan (-0.325500, 103.156800) • Radius Maks: 250m</p>
+                        <p id="officeCoordInfo"><strong>Lokasi Wajib:</strong> Kantor PDAM Perumda Tirta Indragiri, Jl. M. Boya No. 07 Tembilahan (-0.325500, 103.156800) • Radius Maks: 250 m</p>
                         <p id="gpsStatusText" class="text-amber-600 font-medium">Memeriksa lokasi GPS Anda...</p>
                     </div>
                 </div>
@@ -256,7 +256,7 @@
                         
                         <div id="cameraPlaceholder" class="text-center p-4">
                             <i class="fa-solid fa-camera text-4xl text-slate-600 mb-2"></i>
-                            <p class="text-xs text-slate-400">Klik tombol 'Aktifkan Kamera' untuk mulai (wajib di area kantor)</p>
+                            <p class="text-xs text-slate-400">Foto wajah hanya aktif jika HP berada &lt;= 250 m dari Kantor PDAM Jl. M. Boya No. 07 Tembilahan</p>
                         </div>
 
                         <!-- Step Badge Simulator -->
@@ -815,7 +815,7 @@
 
     <!-- ==================== LOGIKA JAVASCRIPT & SUPABASE CLOUD ==================== -->
     <script>
-        // Target Koordinat Wajib Kantor PDAM Jl. M. Boya No. 07 Tembilahan
+        // Target Koordinat Wajib Kantor PDAM Jl. M. Boya No. 07 Tembilahan (Radius Maksimal 250 Meter)
         let OFFICE_LAT = parseFloat(localStorage.getItem('perumda_office_lat')) || -0.3255;
         let OFFICE_LNG = parseFloat(localStorage.getItem('perumda_office_lng')) || 103.1568;
         const MAX_RADIUS_METERS = 250;
@@ -842,6 +842,7 @@
 
         let isGPSValid = false;
         let livenessCompleted = false;
+        let livenessTimers = [];
         let videoStream = null;
         let chartInstance = null;
         let currentRekapMode = 'monthly';
@@ -1124,6 +1125,8 @@
 
             if (viewName === 'presensi') {
                 checkGPSLocation();
+            } else {
+                stopCameraStream();
             }
         }
 
@@ -1294,11 +1297,11 @@
             updateStatsDashboard();
         }
 
-        // ================= GPS WAJIB DI KANTOR JL. M. BOYA NO. 07 =================
+        // ================= GPS WAJIB DI KANTOR JL. M. BOYA NO. 07 (MAKS 250M) =================
         function updateOfficeCoordLabel() {
             const infoEl = document.getElementById('officeCoordInfo');
             if (infoEl) {
-                infoEl.innerHTML = `<strong>Lokasi Wajib:</strong> Kantor PDAM Perumda Tirta Indragiri, Jl. M. Boya No. 07 Tembilahan (${OFFICE_LAT.toFixed(6)}, ${OFFICE_LNG.toFixed(6)}) • Radius Maks: ${MAX_RADIUS_METERS}m`;
+                infoEl.innerHTML = `<strong>Lokasi Wajib:</strong> Kantor PDAM Perumda Tirta Indragiri, Jl. M. Boya No. 07 Tembilahan (${OFFICE_LAT.toFixed(6)}, ${OFFICE_LNG.toFixed(6)}) • Radius Maks: ${MAX_RADIUS_METERS} m`;
             }
         }
 
@@ -1318,7 +1321,7 @@
                     localStorage.setItem('perumda_office_lat', String(OFFICE_LAT));
                     localStorage.setItem('perumda_office_lng', String(OFFICE_LNG));
                     updateOfficeCoordLabel();
-                    alert(`Titik koordinat kantor diperbarui ke posisi saat ini:\nLat: ${OFFICE_LAT.toFixed(6)}\nLng: ${OFFICE_LNG.toFixed(6)}\nRadius: ${MAX_RADIUS_METERS}m`);
+                    alert(`Titik koordinat kantor diperbarui ke posisi saat ini:\nLat: ${OFFICE_LAT.toFixed(6)}\nLng: ${OFFICE_LNG.toFixed(6)}\nBatas Maksimal: ${MAX_RADIUS_METERS} m`);
                     checkGPSLocation();
                 },
                 (error) => {
@@ -1329,59 +1332,66 @@
             );
         }
 
-        function checkGPSLocation() {
-            updateOfficeCoordLabel();
+        function getCurrentGPSPosition() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject(new Error("Perangkat tidak mendukung Geolocation GPS."));
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    resolve,
+                    reject,
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                );
+            });
+        }
+
+        async function verifyOfficeGeofence() {
             const statusEl = document.getElementById('gpsStatusText');
             const badgeEl = document.getElementById('gpsHeaderBadge');
 
             statusEl.className = "text-amber-600 font-medium";
-            statusEl.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-1'></i> Memverifikasi koordinat GPS di area Kantor Jl. M. Boya No. 07 Tembilahan...";
+            statusEl.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-1'></i> Memverifikasi koordinat GPS di area Kantor PDAM Jl. M. Boya No. 07 (maks. 250 m)...";
 
-            if (!navigator.geolocation) {
-                isGPSValid = false;
-                badgeEl.className = "px-3 py-1 bg-rose-50 text-rose-700 text-xs font-semibold rounded-full border border-rose-200";
-                badgeEl.innerHTML = `<i class="fa-solid fa-ban mr-1"></i> GPS Tidak Didukung`;
-                statusEl.className = "text-rose-600 font-bold";
-                statusEl.textContent = "Ditolak: Perangkat tidak mendukung Geolocation GPS. Absensi wajib di kantor Jl. M. Boya No. 07.";
-                checkSubmitState();
-                return;
-            }
+            try {
+                const position = await getCurrentGPSPosition();
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+                const accuracy = Math.round(position.coords.accuracy || 0);
+                const distance = calculateDistance(userLat, userLng, OFFICE_LAT, OFFICE_LNG);
 
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const userLat = position.coords.latitude;
-                    const userLng = position.coords.longitude;
-                    const accuracy = Math.round(position.coords.accuracy || 0);
-                    const distance = calculateDistance(userLat, userLng, OFFICE_LAT, OFFICE_LNG);
-
-                    if (distance <= MAX_RADIUS_METERS) {
-                        isGPSValid = true;
-                        badgeEl.className = "px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-full border border-emerald-200";
-                        badgeEl.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> Dalam Area Kantor (${Math.round(distance)}m)`;
-                        statusEl.className = "text-emerald-600 font-bold flex items-center gap-1";
-                        statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Lokasi Terverifikasi di Kantor PDAM Jl. M. Boya No. 07 (Jarak: ${Math.round(distance)}m, Akurasi GPS: ±${accuracy}m).`;
-                    } else {
-                        isGPSValid = false;
-                        livenessCompleted = false;
-                        stopCameraStream();
-                        badgeEl.className = "px-3 py-1 bg-rose-50 text-rose-700 text-xs font-semibold rounded-full border border-rose-200";
-                        badgeEl.innerHTML = `<i class="fa-solid fa-ban mr-1"></i> Di Luar Area Kantor`;
-                        statusEl.className = "text-rose-600 font-bold";
-                        statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Ditolak Sistem: Jarak terdeteksi ${Math.round(distance)}m (Akurasi GPS: ±${accuracy}m, Posisi HP: ${userLat.toFixed(6)}, ${userLng.toFixed(6)}) di luar batas ${MAX_RADIUS_METERS}m dari Kantor PDAM Jl. M. Boya No. 07.`;
-                    }
-                    checkSubmitState();
-                },
-                (error) => {
+                if (distance <= MAX_RADIUS_METERS) {
+                    isGPSValid = true;
+                    badgeEl.className = "px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-full border border-emerald-200";
+                    badgeEl.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> Dalam Radius (${Math.round(distance)}m / ${MAX_RADIUS_METERS}m)`;
+                    statusEl.className = "text-emerald-600 font-bold flex items-center gap-1";
+                    statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Lokasi Terverifikasi di Kantor PDAM Jl. M. Boya No. 07 (Jarak: ${Math.round(distance)} m dari maks. ${MAX_RADIUS_METERS} m, Akurasi: ±${accuracy} m).`;
+                } else {
                     isGPSValid = false;
                     livenessCompleted = false;
+                    stopCameraStream();
                     badgeEl.className = "px-3 py-1 bg-rose-50 text-rose-700 text-xs font-semibold rounded-full border border-rose-200";
-                    badgeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Lokasi Belum Valid`;
+                    badgeEl.innerHTML = `<i class="fa-solid fa-ban mr-1"></i> Di Luar Radius (${Math.round(distance)}m)`;
                     statusEl.className = "text-rose-600 font-bold";
-                    statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Ditolak: Gagal membaca GPS (${error.message}). Aktifkan izin lokasi browser & GPS HP lalu klik Refresh Posisi.`;
-                    checkSubmitState();
-                },
-                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-            );
+                    statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Foto Wajah Ditolak: Jarak HP ${Math.round(distance)} m melebihi batas maksimal ${MAX_RADIUS_METERS} m dari Kantor PDAM Jl. M. Boya No. 07 Tembilahan (Posisi: ${userLat.toFixed(6)}, ${userLng.toFixed(6)}).`;
+                }
+            } catch (error) {
+                isGPSValid = false;
+                livenessCompleted = false;
+                stopCameraStream();
+                badgeEl.className = "px-3 py-1 bg-rose-50 text-rose-700 text-xs font-semibold rounded-full border border-rose-200";
+                badgeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Lokasi Belum Valid`;
+                statusEl.className = "text-rose-600 font-bold";
+                statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Foto Wajah Ditolak: Gagal membaca GPS (${error.message}). Aktifkan GPS & izin lokasi lalu klik Refresh Posisi.`;
+            }
+
+            checkSubmitState();
+            return isGPSValid;
+        }
+
+        function checkGPSLocation() {
+            updateOfficeCoordLabel();
+            return verifyOfficeGeofence();
         }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -1394,19 +1404,33 @@
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
 
+        function clearLivenessTimers() {
+            livenessTimers.forEach(t => clearTimeout(t));
+            livenessTimers = [];
+            document.getElementById('livenessOverlay').classList.add('hidden');
+        }
+
         function stopCameraStream() {
+            clearLivenessTimers();
             if (videoStream) {
                 videoStream.getTracks().forEach(track => track.stop());
                 videoStream = null;
             }
-            document.getElementById('webcam').classList.add('hidden');
+            const video = document.getElementById('webcam');
+            video.srcObject = null;
+            video.classList.add('hidden');
             document.getElementById('btnLiveness').disabled = true;
+            if (!document.getElementById('photoCaptured').classList.contains('hidden')) {
+                document.getElementById('cameraPlaceholder').classList.add('hidden');
+            } else {
+                document.getElementById('cameraPlaceholder').classList.remove('hidden');
+            }
         }
 
         async function startCamera() {
-            checkGPSLocation();
-            if (!isGPSValid) {
-                alert("Kamera ditolak! Foto wajah wajib dilakukan di lokasi Kantor PDAM Jl. M. Boya No. 07 Tembilahan.");
+            const validLocation = await verifyOfficeGeofence();
+            if (!validLocation) {
+                alert(`Akses kamera & foto wajah ditolak! Titik lokasi HP harus berada dalam radius maksimal ${MAX_RADIUS_METERS} m dari Kantor PDAM Jl. M. Boya No. 07 Tembilahan.`);
                 return;
             }
 
@@ -1418,18 +1442,28 @@
                 video.classList.remove('hidden');
                 document.getElementById('cameraPlaceholder').classList.add('hidden');
                 document.getElementById('photoCaptured').classList.add('hidden');
+                document.getElementById('photoCaptured').removeAttribute('src');
+                livenessCompleted = false;
+                checkSubmitState();
                 document.getElementById('btnLiveness').disabled = false;
             } catch (err) {
                 alert("Gagal mengakses kamera: " + err.message);
             }
         }
 
-        function triggerLiveness() {
-            if (!isGPSValid) {
-                alert("Ditolak! Anda harus berada di area Kantor PDAM Jl. M. Boya No. 07 Tembilahan.");
+        async function triggerLiveness() {
+            const validLocation = await verifyOfficeGeofence();
+            if (!validLocation) {
+                alert(`Foto wajah dibatalkan! Anda berada di luar radius maksimal ${MAX_RADIUS_METERS} m dari Kantor PDAM Jl. M. Boya No. 07 Tembilahan.`);
                 return;
             }
 
+            if (!videoStream) {
+                alert("Aktifkan kamera terlebih dahulu di area Kantor PDAM Jl. M. Boya No. 07 Tembilahan.");
+                return;
+            }
+
+            clearLivenessTimers();
             const overlay = document.getElementById('livenessOverlay');
             const badge = document.getElementById('livenessStepBadge');
             overlay.classList.remove('hidden');
@@ -1437,26 +1471,39 @@
             badge.textContent = "Langkah 1: Silakan SENYUM ke Kamera 😊";
             badge.className = "px-3.5 py-1.5 bg-amber-500 text-slate-950 text-xs font-extrabold rounded-full animate-pulse";
 
-            setTimeout(() => {
+            livenessTimers.push(setTimeout(() => {
                 badge.textContent = "Langkah 2: Geleng Kepala ke KIRI ⬅️";
                 badge.className = "px-3.5 py-1.5 bg-blue-500 text-white text-xs font-extrabold rounded-full animate-pulse";
-            }, 1800);
+            }, 1800));
 
-            setTimeout(() => {
+            livenessTimers.push(setTimeout(() => {
                 badge.textContent = "Langkah 3: Geleng Kepala ke KANAN ➡️";
                 badge.className = "px-3.5 py-1.5 bg-purple-500 text-white text-xs font-extrabold rounded-full animate-pulse";
-            }, 3600);
+            }, 3600));
 
-            setTimeout(() => {
+            livenessTimers.push(setTimeout(async () => {
+                const stillInOffice = await verifyOfficeGeofence();
+                if (!stillInOffice) {
+                    overlay.classList.add('hidden');
+                    livenessCompleted = false;
+                    checkSubmitState();
+                    alert(`Pengambilan foto wajah gagal! Lokasi HP terdeteksi di luar radius maksimal ${MAX_RADIUS_METERS} m dari Kantor PDAM Jl. M. Boya No. 07.`);
+                    return;
+                }
+
                 capturePhoto();
                 overlay.classList.add('hidden');
                 livenessCompleted = true;
-                alert("Verifikasi Biometrik Wajah & Liveness BERHASIL di area kantor!");
+                alert("Foto wajah & Liveness Check BERHASIL diambil dalam radius <= 250 m dari Kantor PDAM Jl. M. Boya No. 07!");
                 checkSubmitState();
-            }, 5200);
+            }, 5200));
         }
 
         function capturePhoto() {
+            if (!isGPSValid) {
+                alert(`Foto wajah tidak diizinkan di luar radius ${MAX_RADIUS_METERS} m dari Kantor PDAM Jl. M. Boya No. 07.`);
+                return;
+            }
             const video = document.getElementById('webcam');
             const img = document.getElementById('photoCaptured');
             const canvas = document.createElement('canvas');
@@ -1466,10 +1513,16 @@
             img.src = canvas.toDataURL('image/png');
             img.classList.remove('hidden');
             video.classList.add('hidden');
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            document.getElementById('btnLiveness').disabled = true;
         }
 
         function checkSubmitState() {
-            document.getElementById('btnSubmitAbsen').disabled = !(isGPSValid && livenessCompleted);
+            const hasPhoto = Boolean(document.getElementById('photoCaptured').getAttribute('src'));
+            document.getElementById('btnSubmitAbsen').disabled = !(isGPSValid && livenessCompleted && hasPhoto);
         }
 
         // ================= SUBMIT ABSENSI & IZIN / CUTI / SAKIT =================
@@ -1486,10 +1539,10 @@
 
         async function handleAbsenSubmit(e) {
             e.preventDefault();
-            checkGPSLocation();
+            const validLocation = await verifyOfficeGeofence();
 
-            if (!isGPSValid) {
-                alert("ABSENSI DITOLAK SISTEM! Anda berada di luar area Kantor PDAM Jl. M. Boya No. 07 Tembilahan atau GPS belum terverifikasi.");
+            if (!validLocation) {
+                alert(`ABSENSI DITOLAK SISTEM! Lokasi HP harus berada dalam radius maksimal ${MAX_RADIUS_METERS} m dari Kantor PDAM Jl. M. Boya No. 07 Tembilahan.`);
                 return;
             }
 
@@ -1538,7 +1591,7 @@
 
             alert(`Absensi Berhasil Disimpan${isCloudConnected ? ' ke Cloud Supabase' : ''}!
 Nama: ${emp.nama}
-Lokasi: Kantor PDAM Jl. M. Boya No. 07, Tembilahan
+Lokasi: Kantor PDAM Jl. M. Boya No. 07, Tembilahan (Radius <= ${MAX_RADIUS_METERS} m)
 Tanggal: ${isoDate}
 Waktu: ${now.toLocaleTimeString()} WIB
 Status: ${isLate ? 'TERLAMBAT (Merah)' : 'HADIR TEPAT WAKTU (Hijau)'}`);
