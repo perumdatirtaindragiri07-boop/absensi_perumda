@@ -228,16 +228,21 @@
 
                 <!-- GPS Geofencing Ketat Kantor -->
                 <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
                         <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                             <i class="fa-solid fa-map-pin text-red-500"></i> Validasi Geolocation GPS Kantor (Wajib)
                         </span>
-                        <button type="button" onclick="checkGPSLocation()" class="text-xs text-blue-600 font-semibold hover:underline">
-                            <i class="fa-solid fa-rotate-right mr-1"></i> Refresh Posisi
-                        </button>
+                        <div class="flex items-center gap-3">
+                            <button type="button" onclick="calibrateOfficeFromCurrentGPS()" class="text-xs text-emerald-700 font-semibold hover:underline">
+                                <i class="fa-solid fa-crosshairs mr-1"></i> Kalibrasi Titik Kantor
+                            </button>
+                            <button type="button" onclick="checkGPSLocation()" class="text-xs text-blue-600 font-semibold hover:underline">
+                                <i class="fa-solid fa-rotate-right mr-1"></i> Refresh Posisi
+                            </button>
+                        </div>
                     </div>
                     <div class="text-xs text-slate-600 space-y-1">
-                        <p><strong>Lokasi Wajib:</strong> Kantor PDAM Perumda Tirta Indragiri, Jl. M. Boya No. 07 Tembilahan (-0.320239, 103.156019) • Radius Maks: 80m</p>
+                        <p id="officeCoordInfo"><strong>Lokasi Wajib:</strong> Kantor PDAM Perumda Tirta Indragiri, Jl. M. Boya No. 07 Tembilahan (-0.325500, 103.156800) • Radius Maks: 250m</p>
                         <p id="gpsStatusText" class="text-amber-600 font-medium">Memeriksa lokasi GPS Anda...</p>
                     </div>
                 </div>
@@ -811,9 +816,9 @@
     <!-- ==================== LOGIKA JAVASCRIPT & SUPABASE CLOUD ==================== -->
     <script>
         // Target Koordinat Wajib Kantor PDAM Jl. M. Boya No. 07 Tembilahan
-        const OFFICE_LAT = -0.3255;
-        const OFFICE_LNG = 103.1568;
-        const MAX_RADIUS_METERS = 150;
+        let OFFICE_LAT = parseFloat(localStorage.getItem('perumda_office_lat')) || -0.3255;
+        let OFFICE_LNG = parseFloat(localStorage.getItem('perumda_office_lng')) || 103.1568;
+        const MAX_RADIUS_METERS = 250;
 
         // Kredensial Default Supabase
         const DEFAULT_SUPABASE_URL = "https://vqmrgprnuatxseqeimlu.supabase.co";
@@ -845,6 +850,7 @@
         window.addEventListener('DOMContentLoaded', async () => {
             buildMonthlyHeaderRow();
             updateDynamicPeriodLabels();
+            updateOfficeCoordLabel();
             loadSavedLogo();
             updateLiveClock();
             setInterval(updateLiveClock, 1000);
@@ -1289,7 +1295,42 @@
         }
 
         // ================= GPS WAJIB DI KANTOR JL. M. BOYA NO. 07 =================
+        function updateOfficeCoordLabel() {
+            const infoEl = document.getElementById('officeCoordInfo');
+            if (infoEl) {
+                infoEl.innerHTML = `<strong>Lokasi Wajib:</strong> Kantor PDAM Perumda Tirta Indragiri, Jl. M. Boya No. 07 Tembilahan (${OFFICE_LAT.toFixed(6)}, ${OFFICE_LNG.toFixed(6)}) • Radius Maks: ${MAX_RADIUS_METERS}m`;
+            }
+        }
+
+        function calibrateOfficeFromCurrentGPS() {
+            if (!navigator.geolocation) {
+                alert("Perangkat tidak mendukung Geolocation GPS.");
+                return;
+            }
+            const statusEl = document.getElementById('gpsStatusText');
+            statusEl.className = "text-amber-600 font-medium";
+            statusEl.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-1'></i> Mengambil koordinat GPS HP saat ini untuk kalibrasi titik kantor...";
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    OFFICE_LAT = position.coords.latitude;
+                    OFFICE_LNG = position.coords.longitude;
+                    localStorage.setItem('perumda_office_lat', String(OFFICE_LAT));
+                    localStorage.setItem('perumda_office_lng', String(OFFICE_LNG));
+                    updateOfficeCoordLabel();
+                    alert(`Titik koordinat kantor diperbarui ke posisi saat ini:\nLat: ${OFFICE_LAT.toFixed(6)}\nLng: ${OFFICE_LNG.toFixed(6)}\nRadius: ${MAX_RADIUS_METERS}m`);
+                    checkGPSLocation();
+                },
+                (error) => {
+                    alert("Gagal mengambil koordinat GPS untuk kalibrasi: " + error.message);
+                    checkGPSLocation();
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        }
+
         function checkGPSLocation() {
+            updateOfficeCoordLabel();
             const statusEl = document.getElementById('gpsStatusText');
             const badgeEl = document.getElementById('gpsHeaderBadge');
 
@@ -1310,6 +1351,7 @@
                 (position) => {
                     const userLat = position.coords.latitude;
                     const userLng = position.coords.longitude;
+                    const accuracy = Math.round(position.coords.accuracy || 0);
                     const distance = calculateDistance(userLat, userLng, OFFICE_LAT, OFFICE_LNG);
 
                     if (distance <= MAX_RADIUS_METERS) {
@@ -1317,7 +1359,7 @@
                         badgeEl.className = "px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-full border border-emerald-200";
                         badgeEl.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> Dalam Area Kantor (${Math.round(distance)}m)`;
                         statusEl.className = "text-emerald-600 font-bold flex items-center gap-1";
-                        statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Lokasi Terverifikasi di Kantor PDAM Jl. M. Boya No. 07 (Jarak: ${Math.round(distance)}m).`;
+                        statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Lokasi Terverifikasi di Kantor PDAM Jl. M. Boya No. 07 (Jarak: ${Math.round(distance)}m, Akurasi GPS: ±${accuracy}m).`;
                     } else {
                         isGPSValid = false;
                         livenessCompleted = false;
@@ -1325,7 +1367,7 @@
                         badgeEl.className = "px-3 py-1 bg-rose-50 text-rose-700 text-xs font-semibold rounded-full border border-rose-200";
                         badgeEl.innerHTML = `<i class="fa-solid fa-ban mr-1"></i> Di Luar Area Kantor`;
                         statusEl.className = "text-rose-600 font-bold";
-                        statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Ditolak Sistem: Anda berada ${Math.round(distance)}m di luar area Kantor PDAM Jl. M. Boya No. 07 Tembilahan (maks ${MAX_RADIUS_METERS}m).`;
+                        statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Ditolak Sistem: Jarak terdeteksi ${Math.round(distance)}m (Akurasi GPS: ±${accuracy}m, Posisi HP: ${userLat.toFixed(6)}, ${userLng.toFixed(6)}) di luar batas ${MAX_RADIUS_METERS}m dari Kantor PDAM Jl. M. Boya No. 07.`;
                     }
                     checkSubmitState();
                 },
@@ -1335,10 +1377,10 @@
                     badgeEl.className = "px-3 py-1 bg-rose-50 text-rose-700 text-xs font-semibold rounded-full border border-rose-200";
                     badgeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Lokasi Belum Valid`;
                     statusEl.className = "text-rose-600 font-bold";
-                    statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Ditolak: Gagal membaca GPS (${error.message}). Aktifkan GPS dan berada di Jl. M. Boya No. 07 Tembilahan.`;
+                    statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Ditolak: Gagal membaca GPS (${error.message}). Aktifkan izin lokasi browser & GPS HP lalu klik Refresh Posisi.`;
                     checkSubmitState();
                 },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
             );
         }
 
@@ -1369,7 +1411,7 @@
             }
 
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 videoStream = stream;
                 const video = document.getElementById('webcam');
                 video.srcObject = stream;
